@@ -1,0 +1,13 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^flutter pub get$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    },
+    "dart.previewFlutterUiGuides": false,
+    "errorLens.enabledDiagnosticLevels": ["error"],
+    "editor.formatOnSave": true,
+
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+}
