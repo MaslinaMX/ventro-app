@@ -52,6 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final controller = context.read<AuthController>();
+    final colors = context.colors;
 
     final success = await controller.register(
       empresa: _empresaController.text.trim(),
@@ -69,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(controller.errorMessage ?? 'Error al crear el negocio'),
-          backgroundColor: VntlColors.error,
+          backgroundColor: colors.error,
         ),
       );
       controller.resetStatus();
@@ -79,13 +80,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<AuthController>().isLoading;
+    final colors = context.colors;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: VntlColors.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: context.backgroundGradient),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(VntlSpacing.xl2),
@@ -101,11 +101,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onTap: () => Navigator.pop(context),
                       child: Row(
                         children: [
-                          const Icon(Icons.arrow_back_rounded,
-                              color: VntlColors.textSecondary, size: 20),
+                          Icon(Icons.arrow_back_rounded, color: colors.textSecondary, size: 20),
                           const SizedBox(width: VntlSpacing.sm),
                           Text('Regresar',
-                              style: VntlText.body.copyWith(color: VntlColors.textSecondary)),
+                              style: VntlText.body.copyWith(color: colors.textSecondary)),
                         ],
                       ),
                     ),
@@ -114,7 +113,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: VntlSpacing.sm),
                     Text(
                       'Configura tu cuenta en segundos',
-                      style: VntlText.body.copyWith(color: VntlColors.textSecondary),
+                      style: VntlText.body.copyWith(color: colors.textSecondary),
                     ),
                     const SizedBox(height: VntlSpacing.xl3),
 
@@ -141,7 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             onChanged: (_) => _slugEdited = true,
                             suffix: Text(
                               '.ventro.com.mx',
-                              style: VntlText.caption.copyWith(color: VntlColors.textTertiary),
+                              style: VntlText.caption.copyWith(color: colors.textTertiary),
                             ),
                             validator: (v) {
                               if (v == null || v.isEmpty) {
@@ -186,7 +185,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: VntlColors.textTertiary,
+                                color: colors.textTertiary,
                                 size: 18,
                               ),
                             ),
@@ -213,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 _obscureConfirm
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: VntlColors.textTertiary,
+                                color: colors.textTertiary,
                                 size: 18,
                               ),
                             ),

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
+import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/inventario/screens/inventario_screen.dart';
+import 'package:ventro_app/features/products/screens/productos_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -11,159 +14,141 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String _currentRoute = '/ventas';
+  String _currentRoute = '/principal';
 
-  final List<VntlSidebarItem> _sidebarItems = const [
-    VntlSidebarItem(
-      label: 'Ventas',
-      icon: Icons.point_of_sale_rounded,
-      route: '/ventas',
-      color: VntlColors.navVentas,
-    ),
-    VntlSidebarItem(
-      label: 'Productos',
-      icon: Icons.inventory_2_rounded,
-      route: '/productos',
-      color: VntlColors.navProductos,
-    ),
-    VntlSidebarItem(
-      label: 'Categorías',
-      icon: Icons.category_rounded,
-      route: '/categorias',
-      color: VntlColors.navCategorias,
-    ),
-    VntlSidebarItem(
-      label: 'Clientes',
-      icon: Icons.people_rounded,
-      route: '/clientes',
-      color: VntlColors.navClientes,
-    ),
-    VntlSidebarItem(
-      label: 'Reportes',
-      icon: Icons.bar_chart_rounded,
-      route: '/reportes',
-      color: VntlColors.navReportes,
-    ),
-  ];
+  List<VntlSidebarItem> get _allSidebarItems {
+    final colors = context.colors;
+    return [
+      VntlSidebarItem(
+          label: 'Principal',
+          icon: Icons.speed_rounded,
+          route: '/principal',
+          color: colors.navVentas,
+          permiso: 'principal'),
+      VntlSidebarItem(
+          label: 'Caja',
+          icon: Icons.point_of_sale_rounded,
+          route: '/caja',
+          color: colors.navVentas,
+          permiso: 'caja'),
+      VntlSidebarItem(
+          label: 'Cotizaciones',
+          icon: Icons.receipt_long_rounded,
+          route: '/cotizaciones',
+          color: colors.navProductos,
+          permiso: 'cotizaciones'),
+      VntlSidebarItem(
+          label: 'Productos',
+          icon: Icons.inventory_2_rounded,
+          route: '/productos',
+          color: colors.navProductos,
+          permiso: 'productos'),
+      VntlSidebarItem(
+          label: 'Ventas',
+          icon: Icons.shopping_cart_rounded,
+          route: '/ventas',
+          color: colors.navVentas,
+          permiso: 'ventas'),
+      VntlSidebarItem(
+          label: 'Pedidos',
+          icon: Icons.checklist_rounded,
+          route: '/pedidos',
+          color: colors.navCategorias,
+          permiso: 'pedidos'),
+      VntlSidebarItem(
+          label: 'Clientes',
+          icon: Icons.people_rounded,
+          route: '/clientes',
+          color: colors.navClientes,
+          permiso: 'clientes'),
+      VntlSidebarItem(
+          label: 'Inventario',
+          icon: Icons.warehouse_rounded,
+          route: '/inventario',
+          color: colors.navCategorias,
+          permiso: 'inventario'),
+      VntlSidebarItem(
+          label: 'Proveedores',
+          icon: Icons.local_shipping_rounded,
+          route: '/proveedores',
+          color: colors.navClientes,
+          permiso: 'proveedores'),
+      VntlSidebarItem(
+          label: 'Compras',
+          icon: Icons.add_shopping_cart_rounded,
+          route: '/compras',
+          color: colors.navCategorias,
+          permiso: 'compras'),
+      VntlSidebarItem(
+          label: 'Reportes',
+          icon: Icons.bar_chart_rounded,
+          route: '/reportes',
+          color: colors.navReportes,
+          permiso: 'reportes'),
+    ];
+  }
+
+  List<VntlSidebarItem> _filteredItems(UserModel user) {
+    if (user.permissions == null) return _allSidebarItems; // admin
+    return _allSidebarItems.where((item) => user.permissions!.contains(item.permiso)).toList();
+  }
 
   void _onRouteSelected(String route) {
     setState(() => _currentRoute = route);
   }
 
-  Future<void> _logout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: VntlColors.primarySurface,
-        shape: RoundedRectangleBorder(borderRadius: VntlRadius.lgBorderRadius),
-        title: const Text('Cerrar sesión', style: VntlText.h4),
-        content: Text(
-          '¿Estás seguro que deseas cerrar sesión?',
-          style: VntlText.body.copyWith(color: VntlColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child:
-                Text('Cancelar', style: VntlText.label.copyWith(color: VntlColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Cerrar sesión', style: VntlText.label.copyWith(color: VntlColors.error)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      await context.read<AuthController>().logout();
-      if (mounted) Navigator.pushReplacementNamed(context, '/');
-    }
-  }
-
   Widget _buildCurrentScreen() {
     switch (_currentRoute) {
-      case '/ventas':
-        return _Placeholder(label: 'Ventas', icon: Icons.point_of_sale_rounded);
+      case '/principal':
+        return _Placeholder(label: 'Principal', icon: Icons.speed_rounded);
+      case '/caja':
+        return _Placeholder(label: 'Caja', icon: Icons.point_of_sale_rounded);
+      case '/cotizaciones':
+        return _Placeholder(label: 'Cotizaciones', icon: Icons.receipt_long_rounded);
       case '/productos':
-        return _Placeholder(label: 'Productos', icon: Icons.inventory_2_rounded);
-      case '/categorias':
-        return _Placeholder(label: 'Categorías', icon: Icons.category_rounded);
+        return const ProductosScreen();
+      case '/ventas':
+        return _Placeholder(label: 'Ventas', icon: Icons.shopping_cart_rounded);
+      case '/pedidos':
+        return _Placeholder(label: 'Pedidos', icon: Icons.checklist_rounded);
       case '/clientes':
         return _Placeholder(label: 'Clientes', icon: Icons.people_rounded);
+      case '/inventario':
+        return const InventarioScreen();
+      case '/proveedores':
+        return _Placeholder(label: 'Proveedores', icon: Icons.local_shipping_rounded);
+      case '/compras':
+        return _Placeholder(label: 'Compras', icon: Icons.add_shopping_cart_rounded);
       case '/reportes':
         return _Placeholder(label: 'Reportes', icon: Icons.bar_chart_rounded);
       default:
-        return _Placeholder(label: 'Ventas', icon: Icons.point_of_sale_rounded);
+        return _Placeholder(label: 'Principal', icon: Icons.speed_rounded);
     }
-  }
-
-  String get _currentTitle {
-    return _sidebarItems
-        .firstWhere((i) => i.route == _currentRoute, orElse: () => _sidebarItems.first)
-        .label;
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthController>().user;
+    if (user == null) return const SizedBox.shrink();
+
+    final items = _filteredItems(user);
+
+    // Si la ruta actual ya no está disponible, ir a la primera
+    if (!items.any((i) => i.route == _currentRoute) && items.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() => _currentRoute = items.first.route);
+      });
+    }
+
+    final currentTitle =
+        items.firstWhere((i) => i.route == _currentRoute, orElse: () => items.first).label;
 
     return VntlLayout(
-      title: _currentTitle,
+      title: currentTitle,
       currentRoute: _currentRoute,
-      sidebarItems: _sidebarItems,
+      sidebarItems: items, // ← filtrados, no _allSidebarItems
       onRouteSelected: _onRouteSelected,
-      appBarActions: [
-        // Usuario
-        if (user != null)
-          Padding(
-            padding: const EdgeInsets.only(right: VntlSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
-                    color: VntlColors.primarySurface,
-                    borderRadius: VntlRadius.fullBorderRadius,
-                  ),
-                  child: Center(
-                    child: Text(
-                      (user.firstName ?? user.name).substring(0, 1).toUpperCase(),
-                      style: VntlText.label.copyWith(color: VntlColors.primary),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: VntlSpacing.sm),
-                Text(
-                  user.firstName ?? user.name,
-                  style: VntlText.label.copyWith(color: VntlColors.textSecondary),
-                ),
-              ],
-            ),
-          ),
-        // Logout
-        GestureDetector(
-          onTap: _logout,
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: VntlColors.destructiveSurface,
-              borderRadius: VntlRadius.mdBorderRadius,
-              border: Border.all(
-                color: VntlColors.destructive.withValues(alpha: 0.3),
-                width: 0.5,
-              ),
-            ),
-            child: const Icon(
-              Icons.logout_rounded,
-              color: VntlColors.destructive,
-              size: 18,
-            ),
-          ),
-        ),
-      ],
+      showUserMenu: true,
       child: _buildCurrentScreen(),
     );
   }
@@ -178,17 +163,18 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: VntlColors.textTertiary),
+          Icon(icon, size: 48, color: colors.textTertiary),
           const SizedBox(height: VntlSpacing.lg),
           Text(label, style: VntlText.h3),
           const SizedBox(height: VntlSpacing.sm),
           Text(
             'Próximamente',
-            style: VntlText.body.copyWith(color: VntlColors.textSecondary),
+            style: VntlText.body.copyWith(color: colors.textSecondary),
           ),
         ],
       ),

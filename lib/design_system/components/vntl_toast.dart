@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../vntl.dart';
+import 'package:ventro_app/design_system/vntl.dart';
 
-// ✅ Ventro Design System V1 — VntlToast
 enum VntlToastType { success, error, warning, info }
 
 class VntlToast {
@@ -11,26 +10,25 @@ class VntlToast {
     VntlToastType type = VntlToastType.info,
     Duration duration = const Duration(seconds: 3),
   }) {
+    final colors = context.colors;
     final (color, icon) = switch (type) {
-      VntlToastType.success => (VntlColors.success, Icons.check_circle_outline_rounded),
-      VntlToastType.error => (VntlColors.error, Icons.error_outline_rounded),
-      VntlToastType.warning => (VntlColors.warning, Icons.warning_amber_rounded),
-      VntlToastType.info => (VntlColors.primary, Icons.info_outline_rounded),
+      VntlToastType.success => (colors.success, Icons.check_circle_outline_rounded),
+      VntlToastType.error => (colors.error, Icons.error_outline_rounded),
+      VntlToastType.warning => (colors.warning, Icons.warning_amber_rounded),
+      VntlToastType.info => (colors.primary, Icons.info_outline_rounded),
     };
-
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
-
     entry = OverlayEntry(
       builder: (_) => _ToastWidget(
         message: message,
         color: color,
         icon: icon,
         duration: duration,
+        surfaceColor: colors.surfaceSecondary,
         onDismiss: () => entry.remove(),
       ),
     );
-
     overlay.insert(entry);
   }
 }
@@ -40,6 +38,7 @@ class _ToastWidget extends StatefulWidget {
   final Color color;
   final IconData icon;
   final Duration duration;
+  final Color surfaceColor;
   final VoidCallback onDismiss;
 
   const _ToastWidget({
@@ -47,6 +46,7 @@ class _ToastWidget extends StatefulWidget {
     required this.color,
     required this.icon,
     required this.duration,
+    required this.surfaceColor,
     required this.onDismiss,
   });
 
@@ -62,20 +62,11 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
-
     _controller.forward();
-
     Future.delayed(widget.duration, () async {
       if (mounted) {
         await _controller.reverse();
@@ -103,20 +94,17 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
           child: Center(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: VntlSpacing.xl2),
-              padding: const EdgeInsets.symmetric(
-                horizontal: VntlSpacing.lg,
-                vertical: VntlSpacing.md,
-              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: VntlSpacing.lg, vertical: VntlSpacing.md),
               decoration: BoxDecoration(
-                color: VntlColors.surfaceSecondary,
+                color: widget.surfaceColor,
                 borderRadius: VntlRadius.lgBorderRadius,
                 border: Border.all(color: widget.color.withValues(alpha: 0.3), width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8)),
                 ],
               ),
               child: Row(
@@ -124,9 +112,7 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                 children: [
                   Icon(widget.icon, color: widget.color, size: 18),
                   const SizedBox(width: VntlSpacing.sm),
-                  Flexible(
-                    child: Text(widget.message, style: VntlText.body),
-                  ),
+                  Flexible(child: Text(widget.message, style: VntlText.body)),
                 ],
               ),
             ),

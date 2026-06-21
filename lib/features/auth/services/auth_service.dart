@@ -80,4 +80,9 @@ class AuthService {
   Future<void> logout() async {
     await _dio.post('/auth/logout');
   }
+
+  Future<UserModel> getMe() async {
+    final response = await _dio.get('/auth/me');
+    return UserModel.fromJson(response.data['user'] ?? response.data);
+  }
 }

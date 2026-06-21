@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
+import 'package:ventro_app/features/settings/screens/partials/change_pin_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,8 +15,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-
-  // Datos pasados desde LookupScreen
   late String _email;
   late String _tenantId;
   late String _empresa;
@@ -41,40 +40,50 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     final controller = context.read<AuthController>();
-
     final success = await controller.login(
       email: _email,
       password: _passwordController.text,
       tenantId: _tenantId,
     );
-
     if (!mounted) return;
-
     if (success) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      final user = controller.user;
+      if (user?.pinIsDefault == true) {
+        await _showChangePinDialog();
+      } else {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(controller.errorMessage ?? 'Contraseña incorrecta'),
-          backgroundColor: VntlColors.error,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(controller.errorMessage ?? 'Contraseña incorrecta'),
+        backgroundColor: context.colors.error,
+      ));
       controller.resetStatus();
     }
   }
 
+  Future<void> _showChangePinDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => ChangePinDialog(
+        onChanged: () {
+          if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isLoading = context.watch<AuthController>().isLoading;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: VntlColors.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: context.backgroundGradient),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(VntlSpacing.xl2),
@@ -89,11 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () => Navigator.pop(context),
                       child: Row(
                         children: [
-                          const Icon(Icons.arrow_back_rounded,
-                              color: VntlColors.textSecondary, size: 20),
+                          Icon(Icons.arrow_back_rounded, color: colors.textSecondary, size: 20),
                           const SizedBox(width: VntlSpacing.sm),
                           Text('Regresar',
-                              style: VntlText.body.copyWith(color: VntlColors.textSecondary)),
+                              style: VntlText.body.copyWith(color: colors.textSecondary)),
                         ],
                       ),
                     ),
@@ -102,13 +110,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: VntlSpacing.sm),
                     Text(
                       _empresa.isNotEmpty ? _empresa : 'Bienvenido de vuelta',
-                      style: VntlText.body.copyWith(color: VntlColors.textSecondary),
+                      style: VntlText.body.copyWith(color: colors.textSecondary),
                     ),
                     const SizedBox(height: VntlSpacing.xl3),
                     VntlCard(
                       child: Column(
                         children: [
-                          // Email (solo lectura)
                           VntlInput(
                             label: 'Correo electrónico',
                             hint: _email,
@@ -131,14 +138,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: VntlColors.textTertiary,
+                                color: colors.textTertiary,
                                 size: 18,
                               ),
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return 'Ingresa tu contraseña';
-                              }
+                              if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
                               if (v.length < 8) return 'Mínimo 8 caracteres';
                               return null;
                             },

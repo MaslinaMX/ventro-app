@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
-import '../controllers/auth_controller.dart';
+import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -18,7 +18,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _phoneController = TextEditingController();
   final _pinController = TextEditingController();
   final _employeeController = TextEditingController();
-
   bool _pinGenerated = false;
   bool _employeeGenerated = false;
   bool _obscurePin = true;
@@ -44,44 +43,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     final controller = context.read<AuthController>();
-
     final success = await controller.completeOnboarding(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       phone: _phoneController.text.trim(),
       securityPin: _pinController.text.trim(),
       employeeNumber: _employeeGenerated || _employeeController.text.isEmpty
-          ? null // el backend genera EMP-XXXX
+          ? null
           : _employeeController.text.trim(),
     );
-
     if (!mounted) return;
-
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(controller.errorMessage ?? 'Error al guardar el perfil'),
-          backgroundColor: VntlColors.error,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(controller.errorMessage ?? 'Error al guardar el perfil'),
+        backgroundColor: context.colors.error,
+      ));
       controller.resetStatus();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isLoading = context.watch<AuthController>().isLoading;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: VntlColors.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: context.backgroundGradient),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(VntlSpacing.xl2),
@@ -97,17 +89,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: VntlSpacing.sm),
                     Text(
                       'Un último paso antes de entrar a tu negocio',
-                      style: VntlText.body.copyWith(color: VntlColors.textSecondary),
+                      style: VntlText.body.copyWith(color: colors.textSecondary),
                     ),
                     const SizedBox(height: VntlSpacing.xl3),
-
-                    // ─── Datos personales ───────────────────────────────────
                     VntlCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Datos personales',
-                              style: VntlText.label.copyWith(color: VntlColors.textSecondary)),
+                              style: VntlText.label.copyWith(color: colors.textSecondary)),
                           const SizedBox(height: VntlSpacing.lg),
                           Row(
                             children: [
@@ -151,18 +141,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: VntlSpacing.lg),
-
-                    // ─── Seguridad ──────────────────────────────────────────
                     VntlCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Seguridad',
-                              style: VntlText.bodyLarge.copyWith(color: VntlColors.textSecondary)),
+                              style: VntlText.bodyLarge.copyWith(color: colors.textSecondary)),
                           const SizedBox(height: VntlSpacing.xs),
                           Text(
                             'El PIN se usará para autorizar acciones en caja, cobros y operaciones sensibles.',
-                            style: VntlText.caption.copyWith(color: VntlColors.textTertiary),
+                            style: VntlText.caption.copyWith(color: colors.textTertiary),
                           ),
                           const SizedBox(height: VntlSpacing.lg),
                           Row(
@@ -187,14 +175,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       _obscurePin
                                           ? Icons.visibility_outlined
                                           : Icons.visibility_off_outlined,
-                                      color: VntlColors.textTertiary,
+                                      color: colors.textTertiary,
                                       size: 18,
                                     ),
                                   ),
                                   validator: (v) {
-                                    if (v == null || v.isEmpty) {
-                                      return 'Requerido';
-                                    }
+                                    if (v == null || v.isEmpty) return 'Requerido';
                                     if (v.length < 4) return '4 dígitos exactos';
                                     return null;
                                   },
@@ -213,25 +199,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               padding: const EdgeInsets.only(top: VntlSpacing.sm),
                               child: Text(
                                 '⚠ Anota tu PIN, no podrás verlo de nuevo.',
-                                style: VntlText.caption.copyWith(color: VntlColors.warning),
+                                style: VntlText.caption.copyWith(color: colors.warning),
                               ),
                             ),
                         ],
                       ),
                     ),
                     const SizedBox(height: VntlSpacing.lg),
-
-                    // ─── Identificación ─────────────────────────────────────
                     VntlCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Identificación',
-                              style: VntlText.bodyLarge.copyWith(color: VntlColors.textSecondary)),
+                              style: VntlText.bodyLarge.copyWith(color: colors.textSecondary)),
                           const SizedBox(height: VntlSpacing.xs),
                           Text(
                             'Número de empleado para identificarte en el sistema.',
-                            style: VntlText.caption.copyWith(color: VntlColors.textTertiary),
+                            style: VntlText.caption.copyWith(color: colors.textTertiary),
                           ),
                           const SizedBox(height: VntlSpacing.lg),
                           Row(
@@ -254,14 +238,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               VntlButton(
                                 label: _employeeGenerated ? 'Manual' : 'Generar',
                                 variant: VntlButtonVariant.ghost,
-                                onPressed: () {
-                                  setState(() {
-                                    _employeeGenerated = !_employeeGenerated;
-                                    if (_employeeGenerated) {
-                                      _employeeController.clear();
-                                    }
-                                  });
-                                },
+                                onPressed: () => setState(() {
+                                  _employeeGenerated = !_employeeGenerated;
+                                  if (_employeeGenerated) _employeeController.clear();
+                                }),
                               ),
                             ],
                           ),
@@ -270,14 +250,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               padding: const EdgeInsets.only(top: VntlSpacing.sm),
                               child: Text(
                                 'Se asignará EMP-0001 automáticamente.',
-                                style: VntlText.caption.copyWith(color: VntlColors.textTertiary),
+                                style: VntlText.caption.copyWith(color: colors.textTertiary),
                               ),
                             ),
                         ],
                       ),
                     ),
                     const SizedBox(height: VntlSpacing.xl2),
-
                     VntlButton(
                       label: 'Entrar a mi negocio',
                       fullWidth: true,

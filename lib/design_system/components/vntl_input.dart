@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 
-// ✅ Ventro Design System V1 — VntlInput
 class VntlInput extends StatefulWidget {
   final String? label;
   final String? hint;
@@ -74,26 +73,33 @@ class _VntlInputState extends State<VntlInput> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final hasError = widget.error != null;
+    final isDisabled = widget.readOnly || !widget.enabled;
 
     final borderColor = hasError
-        ? VntlColors.error
-        : _isFocused
-            ? VntlColors.primary
-            : VntlColors.border;
+        ? colors.error
+        : isDisabled
+            ? colors.border
+            : _isFocused
+                ? colors.primary
+                : colors.border;
+
+    final backgroundColor = isDisabled ? colors.surfaceSecondary : colors.glassSurface;
+    final textColor = isDisabled ? colors.textTertiary : colors.textPrimary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         if (widget.label != null) ...[
-          Text(widget.label!, style: VntlText.labelSmall),
+          Text(widget.label!, style: VntlText.labelSmall.copyWith(color: colors.textSecondary)),
           const SizedBox(height: VntlSpacing.xs),
         ],
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: VntlColors.glassSurface,
+            color: backgroundColor,
             borderRadius: VntlRadius.mdBorderRadius,
             border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 0.5),
           ),
@@ -113,13 +119,13 @@ class _VntlInputState extends State<VntlInput> {
             validator: widget.validator,
             textInputAction: widget.textInputAction,
             onFieldSubmitted: widget.onSubmitted,
-            style: VntlText.body,
-            cursorColor: VntlColors.primary,
+            style: VntlText.body.copyWith(color: textColor),
+            cursorColor: colors.primary,
             decoration: InputDecoration(
               hintText: widget.hint,
-              hintStyle: VntlText.body.copyWith(color: VntlColors.textTertiary),
+              hintStyle: VntlText.body.copyWith(color: colors.textTertiary),
               prefixIcon: widget.prefixIcon != null
-                  ? Icon(widget.prefixIcon, color: VntlColors.textTertiary, size: 18)
+                  ? Icon(widget.prefixIcon, color: colors.textTertiary, size: 18)
                   : null,
               suffix: widget.suffix,
               border: InputBorder.none,
@@ -133,7 +139,7 @@ class _VntlInputState extends State<VntlInput> {
         ),
         if (hasError) ...[
           const SizedBox(height: VntlSpacing.xs),
-          Text(widget.error!, style: VntlText.caption.copyWith(color: VntlColors.error)),
+          Text(widget.error!, style: VntlText.caption.copyWith(color: colors.error)),
         ],
       ],
     );

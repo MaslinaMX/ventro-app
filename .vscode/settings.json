@@ -8,6 +8,7 @@
     "dart.previewFlutterUiGuides": false,
     "errorLens.enabledDiagnosticLevels": ["error"],
     "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
 
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "vscode_vibrancy.type": "under-window"
 }

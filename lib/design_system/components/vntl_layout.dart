@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
+import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
+import 'package:ventro_app/features/auth/models/auth_model.dart';
 
-// ✅ Ventro Design System V1 — VntlLayout
 class VntlLayout extends StatefulWidget {
   final String title;
   final Widget child;
@@ -9,6 +11,7 @@ class VntlLayout extends StatefulWidget {
   final String currentRoute;
   final ValueChanged<String> onRouteSelected;
   final List<Widget>? appBarActions;
+  final bool showUserMenu;
 
   const VntlLayout({
     super.key,
@@ -18,6 +21,7 @@ class VntlLayout extends StatefulWidget {
     required this.currentRoute,
     required this.onRouteSelected,
     this.appBarActions,
+    this.showUserMenu = false,
   });
 
   @override
@@ -26,8 +30,6 @@ class VntlLayout extends StatefulWidget {
 
 class _VntlLayoutState extends State<VntlLayout> {
   bool _sidebarCollapsed = false;
-
-  // Breakpoint para colapsar sidebar automáticamente
   static const double _collapseBreakpoint = 900.0;
 
   @override
@@ -35,18 +37,17 @@ class _VntlLayoutState extends State<VntlLayout> {
     final width = MediaQuery.of(context).size.width;
     final autoCollapse = width < _collapseBreakpoint;
     final collapsed = autoCollapse || _sidebarCollapsed;
+    final role = context.watch<AuthController>().user?.role ?? UserRole.vendedor;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: VntlColors.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: context.backgroundGradient),
         child: Column(
           children: [
             VntlAppBar(
               title: widget.title,
-              actions: widget.appBarActions,
+              showUserMenu: widget.showUserMenu,
               onMenuTap: autoCollapse
                   ? null
                   : () => setState(() => _sidebarCollapsed = !_sidebarCollapsed),
@@ -55,16 +56,13 @@ class _VntlLayoutState extends State<VntlLayout> {
               child: Row(
                 children: [
                   VntlSidebar(
+                    userRole: role.value,
                     items: widget.sidebarItems,
                     currentRoute: widget.currentRoute,
                     onRouteSelected: widget.onRouteSelected,
                     collapsed: collapsed,
                   ),
-                  Expanded(
-                    child: ClipRect(
-                      child: widget.child,
-                    ),
-                  ),
+                  Expanded(child: ClipRect(child: widget.child)),
                 ],
               ),
             ),

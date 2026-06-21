@@ -20,6 +20,23 @@ class AuthController extends ChangeNotifier {
   String? get tenantId => _tenantId;
   bool get isLoading => _status == AuthStatus.loading;
 
+  AuthController() {
+    _loadSessionOnInit();
+  }
+
+  Future<void> _loadSessionOnInit() async {
+    final token = await SecureStorage.getToken();
+    if (token == null) return;
+    try {
+      final user = await _service.getMe();
+      _user = user;
+      _tenantId = await SecureStorage.getTenantId();
+      notifyListeners();
+    } catch (_) {
+      await SecureStorage.clear();
+    }
+  }
+
   // ─── Register ────────────────────────────────────────────────────────────────
   Future<bool> register({
     required String empresa,
@@ -174,5 +191,19 @@ class AuthController extends ChangeNotifier {
       if (message != null) return message.toString();
     }
     return 'Error de conexión. Intenta de nuevo.';
+  }
+
+  Future<void> loadSession() async {
+    final token = await SecureStorage.getToken();
+    if (token == null) return;
+
+    try {
+      final user = await _service.getMe();
+      _user = user;
+      _tenantId = await SecureStorage.getTenantId();
+      notifyListeners();
+    } catch (_) {
+      await SecureStorage.clear();
+    }
   }
 }

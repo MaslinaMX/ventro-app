@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 
-// ✅ Ventro Design System V1 — VntlButton
 enum VntlButtonVariant { primary, secondary, ghost, danger }
 
 enum VntlButtonSize { sm, md, lg }
 
 class VntlButton extends StatelessWidget {
-  final String label;
+  final String? label;
   final VoidCallback? onPressed;
   final VntlButtonVariant variant;
   final VntlButtonSize size;
@@ -17,7 +16,7 @@ class VntlButton extends StatelessWidget {
 
   const VntlButton({
     super.key,
-    required this.label,
+    this.label,
     this.onPressed,
     this.variant = VntlButtonVariant.primary,
     this.size = VntlButtonSize.md,
@@ -28,37 +27,31 @@ class VntlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final height = switch (size) {
       VntlButtonSize.sm => 36.0,
       VntlButtonSize.md => 44.0,
       VntlButtonSize.lg => 52.0,
     };
-
     final fontSize = switch (size) {
       VntlButtonSize.sm => 13.0,
       VntlButtonSize.md => 14.0,
       VntlButtonSize.lg => 16.0,
     };
-
-    final padding = switch (size) {
-      VntlButtonSize.sm => const EdgeInsets.symmetric(horizontal: VntlSpacing.md),
-      VntlButtonSize.md => const EdgeInsets.symmetric(horizontal: VntlSpacing.lg),
-      VntlButtonSize.lg => const EdgeInsets.symmetric(horizontal: VntlSpacing.xl2),
-    };
-
+    final padding = label != null
+        ? switch (size) {
+            VntlButtonSize.sm => const EdgeInsets.symmetric(horizontal: VntlSpacing.md),
+            VntlButtonSize.md => const EdgeInsets.symmetric(horizontal: VntlSpacing.lg),
+            VntlButtonSize.lg => const EdgeInsets.symmetric(horizontal: VntlSpacing.xl2),
+          }
+        : EdgeInsets.zero;
     final (bgColor, textColor, borderColor) = switch (variant) {
-      VntlButtonVariant.primary => (VntlColors.primary, VntlColors.textPrimary, Colors.transparent),
-      VntlButtonVariant.secondary => (
-          VntlColors.primarySurface,
-          VntlColors.primary,
-          VntlColors.primary
-        ),
-      VntlButtonVariant.ghost => (Colors.transparent, VntlColors.textSecondary, VntlColors.border),
-      VntlButtonVariant.danger => (VntlColors.errorSurface, VntlColors.error, VntlColors.error),
+      VntlButtonVariant.primary => (colors.primary, colors.textPrimary, Colors.transparent),
+      VntlButtonVariant.secondary => (colors.primarySurface, colors.primary, colors.primary),
+      VntlButtonVariant.ghost => (Colors.transparent, colors.textSecondary, colors.border),
+      VntlButtonVariant.danger => (colors.errorSurface, colors.error, colors.error),
     };
-
     final isDisabled = onPressed == null || loading;
-
     Widget content = Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -67,18 +60,15 @@ class VntlButton extends StatelessWidget {
           SizedBox(
             width: 16,
             height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: textColor,
-            ),
+            child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
           )
         else if (icon != null) ...[
           Icon(icon, size: fontSize + 2, color: textColor),
-          const SizedBox(width: VntlSpacing.sm),
+          if (label != null) const SizedBox(width: VntlSpacing.sm),
         ],
-        if (!loading)
+        if (!loading && label != null)
           Text(
-            label,
+            label!,
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w600,
@@ -87,9 +77,8 @@ class VntlButton extends StatelessWidget {
           ),
       ],
     );
-
     return SizedBox(
-      width: fullWidth ? double.infinity : null,
+      width: (label == null) ? height : (fullWidth ? double.infinity : null),
       height: height,
       child: GestureDetector(
         onTap: isDisabled ? null : onPressed,

@@ -13,6 +13,19 @@ class LookupScreen extends StatefulWidget {
 class _LookupScreenState extends State<LookupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['email'] != null) {
+        _emailController.text = args['email'];
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -22,12 +35,9 @@ class _LookupScreenState extends State<LookupScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     final controller = context.read<AuthController>();
     final result = await controller.lookup(_emailController.text.trim());
-
     if (!mounted) return;
-
     if (result != null) {
       Navigator.pushNamed(context, '/login', arguments: {
         'email': _emailController.text.trim(),
@@ -35,26 +45,23 @@ class _LookupScreenState extends State<LookupScreen> {
         'empresa': result['empresa'],
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(controller.errorMessage ?? 'No encontramos una cuenta con ese correo'),
-          backgroundColor: VntlColors.error,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(controller.errorMessage ?? 'No encontramos una cuenta con ese correo'),
+        backgroundColor: context.colors.error,
+      ));
       controller.resetStatus();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isLoading = context.watch<AuthController>().isLoading;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: VntlColors.backgroundGradient,
-        ),
+        decoration: BoxDecoration(gradient: context.backgroundGradient),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(VntlSpacing.xl2),
@@ -69,11 +76,10 @@ class _LookupScreenState extends State<LookupScreen> {
                       onTap: () => Navigator.pop(context),
                       child: Row(
                         children: [
-                          const Icon(Icons.arrow_back_rounded,
-                              color: VntlColors.textSecondary, size: 20),
+                          Icon(Icons.arrow_back_rounded, color: colors.textSecondary, size: 20),
                           const SizedBox(width: VntlSpacing.sm),
                           Text('Regresar',
-                              style: VntlText.body.copyWith(color: VntlColors.textSecondary)),
+                              style: VntlText.body.copyWith(color: colors.textSecondary)),
                         ],
                       ),
                     ),
@@ -82,7 +88,7 @@ class _LookupScreenState extends State<LookupScreen> {
                     const SizedBox(height: VntlSpacing.sm),
                     Text(
                       'Ingresa tu correo para encontrar tu cuenta',
-                      style: VntlText.body.copyWith(color: VntlColors.textSecondary),
+                      style: VntlText.body.copyWith(color: colors.textSecondary),
                     ),
                     const SizedBox(height: VntlSpacing.xl3),
                     VntlCard(
@@ -97,9 +103,7 @@ class _LookupScreenState extends State<LookupScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _submit(),
                             validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return 'Ingresa tu correo';
-                              }
+                              if (v == null || v.isEmpty) return 'Ingresa tu correo';
                               if (!v.contains('@')) return 'Correo inválido';
                               return null;
                             },
