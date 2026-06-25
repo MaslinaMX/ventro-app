@@ -55,10 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/dashboard');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(controller.errorMessage ?? 'Contraseña incorrecta'),
-        backgroundColor: context.colors.error,
-      ));
+      VntlToast.show(
+        context,
+        message: controller.errorMessage ?? 'Contraseña incorrecta',
+        type: VntlToastType.error,
+      );
       controller.resetStatus();
     }
   }

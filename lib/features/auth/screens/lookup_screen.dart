@@ -45,10 +45,11 @@ class _LookupScreenState extends State<LookupScreen> {
         'empresa': result['empresa'],
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(controller.errorMessage ?? 'No encontramos una cuenta con ese correo'),
-        backgroundColor: context.colors.error,
-      ));
+      VntlToast.show(
+        context,
+        message: controller.errorMessage ?? 'No encontramos una cuenta con ese correo',
+        type: VntlToastType.error,
+      );
       controller.resetStatus();
     }
   }

@@ -62,10 +62,11 @@ class _SucursalesSectionState extends State<SucursalesSection> {
     final ctrl = context.read<SettingsController>();
     final ok = await ctrl.deleteSucursal(sucursal.id);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'Sucursal eliminada' : ctrl.errorMessage ?? 'Error al eliminar'),
-      backgroundColor: ok ? colors.success : colors.error,
-    ));
+    VntlToast.show(
+      context,
+      message: ok ? 'Sucursal eliminada' : ctrl.errorMessage ?? 'Error al eliminar',
+      type: ok ? VntlToastType.success : VntlToastType.error,
+    );
   }
 
   @override

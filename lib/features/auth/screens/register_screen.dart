@@ -52,7 +52,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final controller = context.read<AuthController>();
-    final colors = context.colors;
 
     final success = await controller.register(
       empresa: _empresaController.text.trim(),
@@ -67,11 +66,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success) {
       Navigator.pushReplacementNamed(context, '/onboarding');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(controller.errorMessage ?? 'Error al crear el negocio'),
-          backgroundColor: colors.error,
-        ),
+      VntlToast.show(
+        context,
+        message: controller.errorMessage ?? 'Error al crear el negocio',
+        type: VntlToastType.error,
       );
       controller.resetStatus();
     }

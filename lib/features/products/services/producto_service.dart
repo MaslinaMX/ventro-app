@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:ventro_app/core/network/api_client.dart'; // ajusta este import a tu ruta real
 import 'package:ventro_app/features/products/models/producto_variante_imagen_model.dart';
+import 'package:ventro_app/features/products/models/variantes_inactivas_page.dart';
 
 import '../models/categoria_model.dart';
 import '../models/producto_model.dart';
@@ -176,5 +177,26 @@ class ProductoService {
 
   Future<void> deleteCategoria(int id) async {
     await _dio.delete('/categorias/$id');
+  }
+
+  /// Lista variantes inactivas de todos los productos, paginado.
+  /// [page] inicia en 1. [search] filtra por nombre/sku/código de barras
+  /// de la variante o por nombre del producto.
+  Future<VariantesInactivasPage> getVariantesInactivas({
+    int page = 1,
+    String? search,
+  }) async {
+    final response = await _dio.get('/productos/variantes/inactivas', queryParameters: {
+      'page': page,
+      if (search != null && search.isNotEmpty) 'search': search,
+    });
+    return VariantesInactivasPage.fromJson(_extractMap(response.data));
+  }
+
+  Future<ProductoVarianteModel> reactivarVariante(int productoId, int varianteId) async {
+    final response = await _dio.patch(
+      '/productos/$productoId/variantes/$varianteId/reactivar',
+    );
+    return ProductoVarianteModel.fromJson(_extractMap(response.data));
   }
 }

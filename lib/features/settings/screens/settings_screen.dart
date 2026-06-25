@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
+import 'package:ventro_app/features/caja/screens/cajas_settings_section.dart';
+import 'package:ventro_app/features/metodos_pago/screens/metodos_pago_settings_section.dart';
 import 'package:ventro_app/features/settings/screens/partials/general_section.dart';
 import 'package:ventro_app/features/settings/screens/partials/sucursales_sections.dart';
 import 'package:ventro_app/features/users/screens/users_section.dart';
@@ -24,8 +26,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   List<_SettingsItem> get _visibleItems {
     final auth = context.read<AuthController>();
-    final role = auth.user?.role ?? UserRole.vendedor; // ✅ enum
-    if (role == UserRole.admin) return _items; // ✅ comparar con enum
+    final role = auth.user?.role ?? UserRole.vendedor;
+
+    debugPrint('role recibido: $role, isAdmin: ${role?.isAdmin}');
+
+    if (role.isAdmin) return _items;
     return const [
       _SettingsItem(label: 'General', icon: Icons.store_rounded, key: 'general'),
     ];
@@ -39,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _SettingsItem(label: 'Cajas', icon: Icons.point_of_sale_rounded, key: 'cajas'),
     _SettingsItem(label: 'Productos', icon: Icons.inventory_2_rounded, key: 'productos'),
     _SettingsItem(label: 'Facturación', icon: Icons.receipt_rounded, key: 'facturacion'),
-    _SettingsItem(label: 'Lista de precios', icon: Icons.sell_rounded, key: 'precios'),
+    // _SettingsItem(label: 'Lista de precios', icon: Icons.sell_rounded, key: 'precios'),
     _SettingsItem(label: 'Métodos de pago', icon: Icons.credit_card_rounded, key: 'pagos'),
     _SettingsItem(label: 'Tickets', icon: Icons.print_rounded, key: 'tickets'),
   ];
@@ -56,6 +61,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return const UsersSectionScreen();
       case 'productos':
         return const ProductosSettingsSection();
+      case 'cajas':
+        return const CajasSettingsSection();
+      case 'pagos':
+        return const MetodosPagoSettingsSection();
       default:
         return _SettingsPlaceholder(
           section: _currentItem.label,

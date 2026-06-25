@@ -7,6 +7,21 @@ import 'package:ventro_app/features/products/models/variante_stock_inicial.dart'
 import 'package:ventro_app/features/settings/controllers/settings_controller.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// Resultado del editor de variante: o se guardó/canceló (con o sin modelo),
+/// o se eliminó la variante en el backend dentro de este mismo flujo.
+class ResultadoEditorVariante {
+  final ProductoVarianteModel? variante;
+  final bool eliminada;
+
+  const ResultadoEditorVariante.guardada(this.variante) : eliminada = false;
+  const ResultadoEditorVariante.eliminada()
+      : variante = null,
+        eliminada = true;
+  const ResultadoEditorVariante.cancelada()
+      : variante = null,
+        eliminada = false;
+}
+
 /// Abre el modal de edición/creación de una variante.
 ///
 /// Si [guardarInmediato] es true, el modal llama a updateVariante/createVariante
@@ -18,9 +33,13 @@ import 'package:image_picker/image_picker.dart';
 /// del producto lo persista junto con el resto de cambios — comportamiento
 /// actual dentro de ProductoFormScreen.
 ///
-/// Retorna el ProductoVarianteModel resultante en ambos casos (útil para que
-/// quien llama actualice su propio estado local), o null si se canceló.
-Future<ProductoVarianteModel?> abrirEditorVariante(
+/// Si la variante existente se elimina desde este modal (solo disponible en
+/// modo edición), el resultado viene marcado con `eliminada = true` y
+/// `variante = null`, para que quien llama actualice su lista local.
+///
+/// Retorna un [ResultadoEditorVariante] que distingue entre guardado,
+/// cancelado y eliminado.
+Future<ResultadoEditorVariante> abrirEditorVariante(
   BuildContext context, {
   required int productoId,
   ProductoVarianteModel? variante,
@@ -35,7 +54,7 @@ Future<ProductoVarianteModel?> abrirEditorVariante(
     if (fresca != null) variante = fresca;
   }
 
-  if (!context.mounted) return null;
+  if (!context.mounted) return const ResultadoEditorVariante.cancelada();
 
   final colors = context.colors;
   final sucursales = context.read<SettingsController>().sucursales;
@@ -55,6 +74,7 @@ Future<ProductoVarianteModel?> abrirEditorVariante(
   var imagenActual = variante?.imagenPrincipal;
   bool subiendoImagen = false;
   bool guardando = false;
+  bool eliminada = false;
   String? errorGuardado;
 
   final stockCtrls = <int, TextEditingController>{};
@@ -347,6 +367,57 @@ Future<ProductoVarianteModel?> abrirEditorVariante(
       },
     ),
     actions: [
+      if (esEdicionVariante)
+        StatefulBuilder(
+          builder: (context, setModalState) {
+            return VntlButton(
+              label: 'Eliminar',
+              variant: VntlButtonVariant.danger,
+              onPressed: guardando
+                  ? null
+                  : () async {
+                      final confirmado = await VntlModal.show<bool>(
+                        context,
+                        title: 'Eliminar variante',
+                        subtitle: '¿Estás seguro? Esta acción no se puede deshacer.',
+                        width: 440,
+                        content: Text(
+                          'Se eliminará la variante "${variante!.nombre}" de forma permanente.',
+                          style: VntlText.body.copyWith(color: colors.textSecondary),
+                        ),
+                        actions: [
+                          VntlButton(
+                            label: 'Cancelar',
+                            variant: VntlButtonVariant.ghost,
+                            onPressed: () => Navigator.pop(context, false),
+                          ),
+                          VntlButton(
+                            label: 'Eliminar',
+                            variant: VntlButtonVariant.danger,
+                            onPressed: () => Navigator.pop(context, true),
+                          ),
+                        ],
+                      );
+
+                      if (confirmado != true || !context.mounted) return;
+
+                      setModalState(() => guardando = true);
+                      final ctrl = context.read<ProductoController>();
+                      final ok = await ctrl.eliminarVariante(productoId, variante.id);
+
+                      if (ok) {
+                        eliminada = true;
+                        if (context.mounted) Navigator.pop(context);
+                      } else {
+                        setModalState(() {
+                          guardando = false;
+                          errorGuardado = ctrl.errorMessage ?? 'No se pudo eliminar la variante';
+                        });
+                      }
+                    },
+            );
+          },
+        ),
       VntlButton(
         label: 'Cancelar',
         variant: VntlButtonVariant.ghost,
@@ -418,5 +489,11 @@ Future<ProductoVarianteModel?> abrirEditorVariante(
     ctrl.dispose();
   }
 
-  return resultado;
+  if (eliminada) {
+    return const ResultadoEditorVariante.eliminada();
+  }
+  if (resultado == null) {
+    return const ResultadoEditorVariante.cancelada();
+  }
+  return ResultadoEditorVariante.guardada(resultado);
 }

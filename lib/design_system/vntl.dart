@@ -21,6 +21,7 @@ export 'components/vntl_modal.dart';
 export 'components/vntl_tooltip.dart';
 export 'components/vntl_product_card.dart';
 export 'components/vntl_table.dart';
+export 'components/vntl_switch.dart';
 
 export 'helpers/vntl_category_style.dart';
 

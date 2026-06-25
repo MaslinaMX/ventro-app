@@ -122,10 +122,11 @@ class _GeneralSectionState extends State<GeneralSection> {
       final logoOk = await ctrl.uploadLogo(_pendingLogoBytes!, _pendingLogoFileName!);
       if (!logoOk) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(ctrl.errorMessage ?? 'Error al subir logo'),
-            backgroundColor: colors.error,
-          ));
+          VntlToast.show(
+            context,
+            message: ctrl.errorMessage ?? 'Error al subir logo',
+            type: VntlToastType.error,
+          );
         }
         return;
       }
@@ -153,12 +154,12 @@ class _GeneralSectionState extends State<GeneralSection> {
     if (!mounted) return;
     if (success) setState(() => _isDirty = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(
-        success ? 'Cambios guardados correctamente' : ctrl.errorMessage ?? 'Error al guardar',
-      ),
-      backgroundColor: success ? colors.success : colors.error,
-    ));
+    VntlToast.show(
+      context,
+      message:
+          success ? 'Cambios guardados correctamente' : ctrl.errorMessage ?? 'Error al guardar',
+      type: success ? VntlToastType.success : VntlToastType.error,
+    );
   }
 
   Widget _row(Widget left, Widget right) {

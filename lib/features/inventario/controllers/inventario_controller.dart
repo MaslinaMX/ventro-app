@@ -14,6 +14,11 @@ class InventarioController extends ChangeNotifier {
   String? _movimientosError;
   int? _sucursalId;
 
+  /// Umbral configurable para "stock bajo". Default: 5.
+  /// TODO: cuando exista la pantalla de "Alertas de stock" en Settings,
+  /// este valor debe cargarse desde la configuración del tenant.
+  int umbralStockBajo = 5;
+
   List<InventarioStockModel> get stock => _stock;
   List<MovimientoInventarioModel> get movimientos => _movimientos;
   bool get isLoading => _isLoading;
@@ -21,17 +26,24 @@ class InventarioController extends ChangeNotifier {
   String? get error => _error;
   String? get movimientosError => _movimientosError;
   int? get sucursalId => _sucursalId;
+  bool isLoadingUmbral = false;
 
   int get totalProductos => _stock.length;
-  int get alertasStockBajo => _stock.where((s) => s.bajoStock).length;
-  int get productosAgotados => _stock.where((s) => s.cantidad <= 0).length;
+
+  List<InventarioStockModel> get productosStockBajo =>
+      _stock.where((s) => s.cantidad > 0 && s.cantidad < umbralStockBajo).toList();
+
+  List<InventarioStockModel> get productosAgotadosLista =>
+      _stock.where((s) => s.cantidad <= 0).toList();
+
+  int get alertasStockBajo => productosStockBajo.length;
+  int get productosAgotados => productosAgotadosLista.length;
 
   Future<void> cargarStock(int sucursalId, {String? search}) async {
     _sucursalId = sucursalId;
     _isLoading = true;
     _error = null;
     notifyListeners();
-
     try {
       _stock = await _service.getStockPorSucursal(sucursalId, search: search);
     } catch (e) {
@@ -40,7 +52,6 @@ class InventarioController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-
     await cargarMovimientos(sucursalId);
   }
 
@@ -48,7 +59,6 @@ class InventarioController extends ChangeNotifier {
     _isLoadingMovimientos = true;
     _movimientosError = null;
     notifyListeners();
-
     try {
       _movimientos = await _service.getMovimientosPorSucursal(sucursalId);
     } catch (e) {
@@ -64,9 +74,6 @@ class InventarioController extends ChangeNotifier {
     await cargarStock(_sucursalId!);
   }
 
-  /// Registra un ajuste rápido de stock. Calcula automáticamente si es
-  /// entrada ('in') o salida ('out') según la diferencia entre el stock
-  /// actual y el nuevo stock ingresado.
   Future<bool> registrarAjusteRapido({
     required int varianteId,
     required double stockActual,
@@ -78,7 +85,6 @@ class InventarioController extends ChangeNotifier {
 
     final type = diferencia > 0 ? 'in' : 'out';
     final cantidad = diferencia.abs();
-
     try {
       await _service.registrarMovimiento(
         varianteId: varianteId,
@@ -93,5 +99,35 @@ class InventarioController extends ChangeNotifier {
     } catch (e) {
       return false;
     }
+  }
+
+  Future<void> cargarUmbralStockBajo() async {
+    isLoadingUmbral = true;
+    notifyListeners();
+    try {
+      umbralStockBajo = await _service.obtenerStockMinimoGlobal();
+    } catch (_) {
+      // Si falla, se queda con el default de 5.
+    } finally {
+      isLoadingUmbral = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> guardarUmbralStockBajo(int nuevoUmbral) async {
+    try {
+      umbralStockBajo = await _service.actualizarStockMinimoGlobal(nuevoUmbral);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<List<MovimientoInventarioModel>> obtenerMovimientosPorVariante(
+    int varianteId, {
+    int? sucursalId,
+  }) {
+    return _service.getMovimientosPorVariante(varianteId, sucursalId: sucursalId);
   }
 }

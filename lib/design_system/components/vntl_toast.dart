@@ -112,7 +112,15 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
                 children: [
                   Icon(widget.icon, color: widget.color, size: 18),
                   const SizedBox(width: VntlSpacing.sm),
-                  Flexible(child: Text(widget.message, style: VntlText.body)),
+                  Flexible(
+                    child: Text(
+                      widget.message,
+                      style: VntlText.body.copyWith(
+                        color: widget.color,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

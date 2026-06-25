@@ -4,14 +4,19 @@ import 'package:ventro_app/core/config/env.dart';
 import 'package:ventro_app/core/network/api_client.dart';
 import 'package:ventro_app/features/account/controllers/account_controller.dart';
 import 'package:ventro_app/features/account/screens/account_screen.dart';
-import 'package:ventro_app/features/auth/screens/ResetPasswordScreen.dart';
+import 'package:ventro_app/features/auth/screens/reset_password_screen.dart';
 import 'package:ventro_app/features/auth/screens/activate_screen.dart';
 import 'package:ventro_app/features/auth/screens/blocked_screen.dart';
+import 'package:ventro_app/features/caja/controllers/caja_controller.dart';
+import 'package:ventro_app/features/caja/controllers/sesion_caja_controller.dart';
 import 'package:ventro_app/features/dashboard/screens/dashboard_screen.dart';
+import 'package:ventro_app/features/inventario/controllers/inventario_controller.dart';
+import 'package:ventro_app/features/metodos_pago/controllers/metodo_pago_controller.dart';
 import 'package:ventro_app/features/products/controllers/producto_controller.dart';
 import 'package:ventro_app/features/settings/controllers/settings_controller.dart';
 import 'package:ventro_app/features/settings/screens/my_profile_screen.dart';
 import 'package:ventro_app/features/settings/screens/settings_screen.dart';
+import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/screens/welcome_screen.dart';
 import 'features/auth/screens/register_screen.dart';
@@ -44,7 +49,12 @@ class VentroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => SettingsController()),
         ChangeNotifierProvider(create: (_) => AccountController()),
-        ChangeNotifierProvider(create: (_) => ProductoController())
+        ChangeNotifierProvider(create: (_) => ProductoController()),
+        ChangeNotifierProvider(create: (_) => InventarioController()),
+        ChangeNotifierProvider(create: (_) => CajaController()),
+        ChangeNotifierProvider(create: (_) => MetodoPagoController()),
+        ChangeNotifierProvider(create: (_) => SesionCajaController()),
+        ChangeNotifierProvider(create: (_) => VentaController()),
       ],
       child: // En main.dart — reemplaza el routes por onGenerateRoute
           MaterialApp(

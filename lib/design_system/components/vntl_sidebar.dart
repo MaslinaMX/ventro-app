@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 
 class VntlSidebarItem {
   final String label;
@@ -9,24 +10,25 @@ class VntlSidebarItem {
   final String route;
   final int? badgeCount;
   final Color? color;
-  final String? permiso; // ← nuevo
+  final String? permiso;
+  final String? section;
 
-  const VntlSidebarItem({
-    required this.label,
-    required this.icon,
-    required this.route,
-    this.badgeCount,
-    this.color,
-    this.permiso, // ← nuevo
-  });
+  const VntlSidebarItem(
+      {required this.label,
+      required this.icon,
+      required this.route,
+      this.badgeCount,
+      this.color,
+      this.permiso,
+      this.section});
 }
 
-class VntlSidebar extends StatelessWidget {
+class VntlSidebar extends StatefulWidget {
   final List<VntlSidebarItem> items;
   final String currentRoute;
   final ValueChanged<String> onRouteSelected;
   final bool collapsed;
-  final String userRole;
+  final UserRole userRole;
 
   const VntlSidebar({
     super.key,
@@ -41,12 +43,25 @@ class VntlSidebar extends StatelessWidget {
   static const double collapsedWidth = 64.0;
 
   @override
+  State<VntlSidebar> createState() => _VntlSidebarState();
+}
+
+class _VntlSidebarState extends State<VntlSidebar> {
+  final Map<String, bool> _expandedSections = {
+    'OPERACIÓN DIARIA': true,
+    'CATÁLOGO': true,
+    'CADENA DE SUMINISTRO': true,
+    'PERSONAS Y ANÁLISIS': true,
+  };
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    String? activeSection;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
-      width: collapsed ? collapsedWidth : expandedWidth,
+      width: widget.collapsed ? VntlSidebar.collapsedWidth : VntlSidebar.expandedWidth,
       child: ClipRRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -57,23 +72,124 @@ class VntlSidebar extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _SidebarHeader(collapsed: collapsed),
+                _SidebarHeader(collapsed: widget.collapsed),
                 const SizedBox(height: VntlSpacing.lg),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: VntlSpacing.sm,
-                      vertical: VntlSpacing.xs,
-                    ),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: VntlSpacing.xs),
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return _SidebarTile(
-                        item: item,
-                        isActive: currentRoute == item.route,
-                        collapsed: collapsed,
-                        onTap: () => onRouteSelected(item.route),
+                  child: Builder(
+                    builder: (context) {
+                      final colors = context.colors;
+                      final children = <Widget>[];
+                      final rootItems = <VntlSidebarItem>[];
+                      final sectionItems = <String, List<VntlSidebarItem>>{};
+                      for (final item in widget.items) {
+                        if (item.section == null) {
+                          rootItems.add(item);
+                        } else {
+                          sectionItems.putIfAbsent(item.section!, () => []);
+                          sectionItems[item.section!]!.add(item);
+                        }
+                      }
+                      // ───── Items sin sección (Principal) ─────
+                      for (final item in rootItems) {
+                        children.add(
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: VntlSpacing.xs),
+                            child: _SidebarTile(
+                              item: item,
+                              isActive: widget.currentRoute == item.route,
+                              collapsed: widget.collapsed,
+                              onTap: () => widget.onRouteSelected(item.route),
+                            ),
+                          ),
+                        );
+                      }
+
+                      for (final item in widget.items) {
+                        if (item.route == widget.currentRoute) {
+                          activeSection = item.section;
+                          break;
+                        }
+                      }
+
+                      // ───── Secciones ─────
+                      sectionItems.forEach((section, items) {
+                        if (!widget.collapsed) {
+                          children.add(
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                VntlSpacing.md,
+                                VntlSpacing.lg,
+                                VntlSpacing.md,
+                                VntlSpacing.sm,
+                              ),
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (widget.collapsed) return;
+                                  if (section == activeSection) return;
+
+                                  setState(() {
+                                    _expandedSections[section] =
+                                        !(_expandedSections[section] ?? true);
+                                  });
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    VntlSpacing.md,
+                                    VntlSpacing.xs,
+                                    VntlSpacing.md,
+                                    VntlSpacing.xs,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          section,
+                                          style: VntlText.caption.copyWith(
+                                            color: colors.textTertiary,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 1.0,
+                                          ),
+                                        ),
+                                      ),
+                                      Icon(
+                                        (_expandedSections[section] ?? true)
+                                            ? Icons.keyboard_arrow_down_rounded
+                                            : Icons.keyboard_arrow_right_rounded,
+                                        size: 18,
+                                        color: colors.textTertiary,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (widget.collapsed ||
+                            section == activeSection ||
+                            (_expandedSections[section] ?? true)) {
+                          for (final item in items) {
+                            children.add(
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: VntlSpacing.xs),
+                                child: _SidebarTile(
+                                  item: item,
+                                  isActive: widget.currentRoute == item.route,
+                                  collapsed: widget.collapsed,
+                                  onTap: () => widget.onRouteSelected(item.route),
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      });
+                      return ListView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: VntlSpacing.sm,
+                          vertical: VntlSpacing.xs,
+                        ),
+                        children: children,
                       );
                     },
                   ),
@@ -94,7 +210,7 @@ class VntlSidebar extends StatelessWidget {
                           color: Color(0xFF4ADE80),
                         ),
                         isActive: false,
-                        collapsed: collapsed,
+                        collapsed: widget.collapsed,
                         onTap: () async {
                           final uri = Uri.parse('https://wa.me/522713164997');
                           if (await canLaunchUrl(uri)) {
@@ -102,7 +218,7 @@ class VntlSidebar extends StatelessWidget {
                           }
                         },
                       ),
-                      if (userRole == 'admin') ...[
+                      if (widget.userRole.isAdmin) ...[
                         const SizedBox(height: VntlSpacing.xs),
                         _SidebarTile(
                           item: const VntlSidebarItem(
@@ -112,7 +228,7 @@ class VntlSidebar extends StatelessWidget {
                             color: Color(0xFF8A8A8A),
                           ),
                           isActive: false,
-                          collapsed: collapsed,
+                          collapsed: widget.collapsed,
                           onTap: () => Navigator.pushNamed(context, '/preferencias'),
                         ),
                       ],

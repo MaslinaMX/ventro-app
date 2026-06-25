@@ -4,6 +4,7 @@ import 'package:ventro_app/features/products/models/categoria_model.dart';
 import 'package:ventro_app/features/products/models/producto_model.dart';
 import 'package:ventro_app/features/products/models/producto_variante_imagen_model.dart';
 import 'package:ventro_app/features/products/models/producto_variante_model.dart';
+import 'package:ventro_app/features/products/models/variantes_inactivas_page.dart';
 import 'package:ventro_app/features/products/services/producto_service.dart';
 
 class ProductoController extends ChangeNotifier {
@@ -18,6 +19,14 @@ class ProductoController extends ChangeNotifier {
   bool isLoadingCategorias = false;
   bool isSaving = false;
   String? errorMessage;
+
+  // ─── Variantes inactivas ────────────────────────────────────────────────
+  List<VarianteInactiva> variantesInactivas = [];
+  bool isLoadingInactivas = false;
+  bool isReactivando = false;
+  int _paginaInactivas = 1;
+  bool hayMasInactivas = true;
+  String? errorInactivas;
 
   Future<void> cargarProductos() async {
     isLoadingProductos = true;
@@ -342,6 +351,94 @@ class ProductoController extends ChangeNotifier {
       errorMessage = 'No se pudo eliminar la categoría';
       notifyListeners();
       return false;
+    }
+  }
+
+  // ─── Variantes inactivas ────────────────────────────────────────────────
+
+  /// Carga la primera página de variantes inactivas. Reinicia la paginación
+  /// y reemplaza la lista actual — úsalo al entrar a la pantalla o al buscar.
+  Future<void> cargarVariantesInactivas({String? search}) async {
+    isLoadingInactivas = true;
+    errorInactivas = null;
+    _paginaInactivas = 1;
+    notifyListeners();
+    try {
+      final pagina = await _service.getVariantesInactivas(page: 1, search: search);
+      variantesInactivas = pagina.items;
+      hayMasInactivas = pagina.hasMore;
+    } catch (e, st) {
+      debugPrint('❌ cargarVariantesInactivas: $e\n$st');
+      errorInactivas = 'No se pudieron cargar las variantes inactivas';
+    } finally {
+      isLoadingInactivas = false;
+      notifyListeners();
+    }
+  }
+
+  /// Carga la siguiente página y la agrega al final de la lista actual
+  /// (scroll infinito / "cargar más").
+  Future<void> cargarMasVariantesInactivas({String? search}) async {
+    if (!hayMasInactivas || isLoadingInactivas) return;
+    isLoadingInactivas = true;
+    notifyListeners();
+    try {
+      final siguiente = _paginaInactivas + 1;
+      final pagina = await _service.getVariantesInactivas(page: siguiente, search: search);
+      variantesInactivas = [...variantesInactivas, ...pagina.items];
+      hayMasInactivas = pagina.hasMore;
+      _paginaInactivas = siguiente;
+    } catch (e, st) {
+      debugPrint('❌ cargarMasVariantesInactivas: $e\n$st');
+      errorInactivas = 'No se pudieron cargar más variantes';
+    } finally {
+      isLoadingInactivas = false;
+      notifyListeners();
+    }
+  }
+
+  /// Reactiva una variante (activo = true), la quita de la lista local
+  /// de inactivas, y la inserta en el producto correspondiente dentro de
+  /// `productos` si ese producto ya está cargado en memoria.
+  /// Devuelve la variante actualizada, o null si falló.
+  Future<ProductoVarianteModel?> reactivarVariante(int productoId, int varianteId) async {
+    isReactivando = true;
+    notifyListeners();
+    try {
+      final reactivada = await _service.reactivarVariante(productoId, varianteId);
+
+      variantesInactivas = variantesInactivas.where((v) => v.variante.id != varianteId).toList();
+
+      final index = productos.indexWhere((p) => p.id == productoId);
+      if (index >= 0) {
+        final actual = productos[index];
+        final yaExiste = actual.variantes.any((v) => v.id == varianteId);
+        final variantesActualizadas = yaExiste
+            ? [
+                for (final v in actual.variantes) v.id == varianteId ? reactivada : v,
+              ]
+            : [...actual.variantes, reactivada];
+
+        productos[index] = ProductoModel(
+          id: actual.id,
+          categoriaId: actual.categoriaId,
+          nombre: actual.nombre,
+          descripcion: actual.descripcion,
+          activo: actual.activo,
+          tieneVariantes: actual.tieneVariantes,
+          categoria: actual.categoria,
+          variantes: variantesActualizadas,
+        );
+      }
+
+      return reactivada;
+    } catch (e) {
+      debugPrint('❌ reactivarVariante: $e');
+      errorInactivas = 'No se pudo reactivar la variante';
+      return null;
+    } finally {
+      isReactivando = false;
+      notifyListeners();
     }
   }
 }

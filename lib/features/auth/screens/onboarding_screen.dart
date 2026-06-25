@@ -57,10 +57,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(controller.errorMessage ?? 'Error al guardar el perfil'),
-        backgroundColor: context.colors.error,
-      ));
+      VntlToast.show(
+        context,
+        message: controller.errorMessage ?? 'Error al guardar el perfil',
+        type: VntlToastType.error,
+      );
       controller.resetStatus();
     }
   }

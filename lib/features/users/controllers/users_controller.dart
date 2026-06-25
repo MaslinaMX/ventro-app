@@ -1,7 +1,7 @@
 // ✅ V2
 
 import 'package:flutter/foundation.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/users/services/user_service.dart';
 
 enum UsersStatus { idle, loading, success, error }

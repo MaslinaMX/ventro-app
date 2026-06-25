@@ -192,8 +192,10 @@ class _CategoriasSettingsSectionState extends State<CategoriasSettingsSection> {
             if (ok) {
               if (context.mounted) Navigator.pop(context, true);
             } else if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(ctrl.errorMessage ?? 'No se pudo guardar la categoría')),
+              VntlToast.show(
+                context,
+                message: ctrl.errorMessage ?? 'No se pudo guardar la categoría',
+                type: VntlToastType.error,
               );
             }
           },
@@ -223,8 +225,10 @@ class _CategoriasSettingsSectionState extends State<CategoriasSettingsSection> {
     if (confirmado == true) {
       final ok = await ctrl.eliminarCategoria(categoria.id);
       if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ctrl.errorMessage ?? 'No se pudo eliminar')),
+        VntlToast.show(
+          context,
+          message: ctrl.errorMessage ?? 'No se pudo eliminar la categoria',
+          type: VntlToastType.error,
         );
       }
     }

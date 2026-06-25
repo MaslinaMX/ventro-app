@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 
 class VntlAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -172,7 +172,7 @@ class _UserMenuButton extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (context.read<AuthController>().user?.role == UserRole.admin) ...[
+            if (context.read<AuthController>().user?.role.isAdmin == true) ...[
               Divider(color: colors.border, height: 0.5, thickness: 0.5),
               _DropdownItem(
                 icon: Icons.storefront_outlined,

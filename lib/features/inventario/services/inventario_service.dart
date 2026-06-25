@@ -61,4 +61,34 @@ class InventarioService {
       Map<String, dynamic>.from(response.data),
     );
   }
+
+  Future<int> obtenerStockMinimoGlobal() async {
+    final response = await _dio.get('/inventario/configuracion/stock-minimo');
+    return (response.data['cantidad_minima'] as num).toInt();
+  }
+
+  Future<int> actualizarStockMinimoGlobal(int cantidadMinima) async {
+    final response = await _dio.post(
+      '/inventario/configuracion/stock-minimo',
+      data: {'cantidad_minima': cantidadMinima},
+    );
+    return (response.data['cantidad_minima'] as num).toInt();
+  }
+
+  Future<List<MovimientoInventarioModel>> getMovimientosPorVariante(
+    int varianteId, {
+    int? sucursalId,
+  }) async {
+    final response = await _dio.get(
+      '/inventario/variantes/$varianteId/movimientos',
+      queryParameters: {
+        if (sucursalId != null) 'sucursal_id': sucursalId,
+        'per_page': 100,
+      },
+    );
+    final List data = response.data['data'] as List;
+    return data
+        .map((e) => MovimientoInventarioModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
 }

@@ -272,8 +272,10 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
             if (creada != null) {
               Navigator.pop(context, creada);
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(ctrl.errorMessage ?? 'No se pudo crear la categoría')),
+              VntlToast.show(
+                context,
+                message: ctrl.errorMessage ?? 'No se pudo crear la categoría',
+                type: VntlToastType.error,
               );
             }
           },
@@ -301,20 +303,75 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
       totalVariantesExistentes: _variantes.length,
     );
 
-    if (resultado != null) {
+    if (resultado.eliminada && index != null) {
+      setState(() => _variantes.removeAt(index));
+      return;
+    }
+
+    if (resultado.variante != null) {
       setState(() {
         if (index != null) {
-          _variantes[index] = resultado;
+          _variantes[index] = resultado.variante!;
         } else {
-          _variantes.add(resultado);
+          _variantes.add(resultado.variante!);
         }
         _variantesError = null;
       });
     }
   }
 
-  void _eliminarVariante(int index) {
-    setState(() => _variantes.removeAt(index));
+  Future<void> _eliminarVariante(int index) async {
+    final variante = _variantes[index];
+
+    // Variante nueva, todavía sin guardar en el backend: se quita directo.
+    if (variante.id == 0) {
+      setState(() => _variantes.removeAt(index));
+      return;
+    }
+
+    final colors = context.colors;
+    final confirmado = await VntlModal.show<bool>(
+      context,
+      title: 'Eliminar variante',
+      subtitle: '¿Estás seguro? Esta acción no se puede deshacer.',
+      width: 440,
+      content: Text(
+        'Se eliminará la variante "${variante.nombre}" de forma permanente.',
+        style: VntlText.body.copyWith(color: colors.textSecondary),
+      ),
+      actions: [
+        VntlButton(
+          label: 'Cancelar',
+          variant: VntlButtonVariant.ghost,
+          onPressed: () => Navigator.pop(context, false),
+        ),
+        VntlButton(
+          label: 'Eliminar',
+          variant: VntlButtonVariant.danger,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+      ],
+    );
+
+    if (confirmado != true || !mounted) return;
+
+    final productoId = widget.productoExistente?.id;
+    if (productoId == null) return; // no debería pasar si variante.id != 0
+
+    final ctrl = context.read<ProductoController>();
+    final ok = await ctrl.eliminarVariante(productoId, variante.id);
+
+    if (!mounted) return;
+
+    if (ok) {
+      setState(() => _variantes.removeAt(index));
+    } else {
+      VntlToast.show(
+        context,
+        message: ctrl.errorMessage ?? 'No se pudo eliminar la variante',
+        type: VntlToastType.error,
+      );
+    }
   }
 
   /// Construye la variante única a partir de los campos planos, para el
@@ -382,8 +439,10 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
     if (resultado != null) {
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ctrl.errorMessage ?? 'No se pudo guardar el producto')),
+      VntlToast.show(
+        context,
+        message: ctrl.errorMessage ?? 'No se pudo guardar el producto',
+        type: VntlToastType.error,
       );
     }
   }
@@ -510,31 +569,13 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
                               borderRadius: VntlRadius.lgBorderRadius,
                               border: Border.all(color: colors.border, width: 0.5),
                             ),
-                            child: Row(
-                              children: [
-                                Switch(
-                                  value: _tieneVariantes,
-                                  activeColor: colors.primary,
-                                  onChanged: (v) => setState(() => _tieneVariantes = v),
-                                ),
-                                const SizedBox(width: VntlSpacing.sm),
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Text('Este producto tiene variantes', style: VntlText.body),
-                                      const SizedBox(width: VntlSpacing.xs),
-                                      VntlTooltip(
-                                        message:
-                                            'Activa esto si vendes el mismo producto en diferentes '
-                                            'tamaños, sabores o presentaciones con precios distintos. '
-                                            'Si es un producto único, déjalo apagado.',
-                                        child: Icon(Icons.info_outline_rounded,
-                                            size: 16, color: colors.textTertiary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            child: VntlSwitch(
+                              value: _tieneVariantes,
+                              label: 'Este producto tiene variantes',
+                              tooltip: 'Activa esto si vendes el mismo producto en diferentes '
+                                  'tamaños, sabores o presentaciones con precios distintos. '
+                                  'Si es un producto único, déjalo apagado.',
+                              onChanged: (v) => setState(() => _tieneVariantes = v),
                             ),
                           ),
                           const SizedBox(height: VntlSpacing.lg),

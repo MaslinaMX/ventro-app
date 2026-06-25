@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 
 class VntlLayout extends StatefulWidget {
   final String title;
@@ -12,6 +12,7 @@ class VntlLayout extends StatefulWidget {
   final ValueChanged<String> onRouteSelected;
   final List<Widget>? appBarActions;
   final bool showUserMenu;
+  final bool forceCollapsed;
 
   const VntlLayout({
     super.key,
@@ -22,6 +23,7 @@ class VntlLayout extends StatefulWidget {
     required this.onRouteSelected,
     this.appBarActions,
     this.showUserMenu = false,
+    this.forceCollapsed = false,
   });
 
   @override
@@ -36,7 +38,7 @@ class _VntlLayoutState extends State<VntlLayout> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final autoCollapse = width < _collapseBreakpoint;
-    final collapsed = autoCollapse || _sidebarCollapsed;
+    final collapsed = autoCollapse || _sidebarCollapsed || widget.forceCollapsed;
     final role = context.watch<AuthController>().user?.role ?? UserRole.vendedor;
 
     return Scaffold(
@@ -48,7 +50,7 @@ class _VntlLayoutState extends State<VntlLayout> {
             VntlAppBar(
               title: widget.title,
               showUserMenu: widget.showUserMenu,
-              onMenuTap: autoCollapse
+              onMenuTap: (autoCollapse || widget.forceCollapsed)
                   ? null
                   : () => setState(() => _sidebarCollapsed = !_sidebarCollapsed),
             ),
@@ -56,7 +58,7 @@ class _VntlLayoutState extends State<VntlLayout> {
               child: Row(
                 children: [
                   VntlSidebar(
-                    userRole: role.value,
+                    userRole: role,
                     items: widget.sidebarItems,
                     currentRoute: widget.currentRoute,
                     onRouteSelected: widget.onRouteSelected,

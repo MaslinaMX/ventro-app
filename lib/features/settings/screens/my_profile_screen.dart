@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/settings/screens/partials/change_password_screen.dart';
 import 'package:ventro_app/features/settings/screens/partials/change_pin_screen.dart';
 

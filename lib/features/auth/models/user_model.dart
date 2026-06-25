@@ -1,16 +1,24 @@
 // ✅ auth_model.dart
 
-enum UserRole { admin, vendedor, personalizado }
+enum UserRole { adminEmpresa, adminSucursal, vendedor }
 
 extension UserRoleExt on UserRole {
   String get label => switch (this) {
-        UserRole.admin => 'Admin',
+        UserRole.adminEmpresa => 'Admin Empresa',
+        UserRole.adminSucursal => 'Admin Sucursal',
         UserRole.vendedor => 'Vendedor',
-        UserRole.personalizado => 'Personalizado',
       };
-  String get value => name;
-  static UserRole fromString(String v) =>
-      UserRole.values.firstWhere((e) => e.name == v, orElse: () => UserRole.vendedor);
+  String get value => switch (this) {
+        UserRole.adminEmpresa => 'admin_empresa',
+        UserRole.adminSucursal => 'admin_sucursal',
+        UserRole.vendedor => 'vendedor',
+      };
+  static UserRole fromString(String v) => switch (v) {
+        'admin_empresa' => UserRole.adminEmpresa,
+        'admin_sucursal' => UserRole.adminSucursal,
+        _ => UserRole.vendedor,
+      };
+  bool get isAdmin => this == UserRole.adminEmpresa || this == UserRole.adminSucursal;
 }
 
 class UserModel {
@@ -22,7 +30,6 @@ class UserModel {
   final String? phone;
   final String? employeeNumber;
   final UserRole role;
-  final List<String>? permissions;
   final bool isSeller;
   final bool isDeletable;
   final bool activo;
@@ -40,7 +47,6 @@ class UserModel {
     this.phone,
     this.employeeNumber,
     required this.role,
-    this.permissions,
     required this.isSeller,
     required this.isDeletable,
     required this.activo,
@@ -59,7 +65,6 @@ class UserModel {
         phone: j['phone'],
         employeeNumber: j['employee_number'],
         role: UserRoleExt.fromString(j['role'] ?? 'vendedor'),
-        permissions: (j['permissions'] as List<dynamic>?)?.cast<String>(),
         isSeller: j['is_seller'] ?? false,
         isDeletable: j['is_deletable'] ?? true,
         activo: j['activo'] ?? true,
@@ -83,7 +88,6 @@ class UserModel {
         phone: phone,
         employeeNumber: employeeNumber,
         role: role,
-        permissions: permissions,
         isSeller: isSeller,
         isDeletable: isDeletable,
         activo: activo ?? this.activo,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ventro_app/design_system/vntl.dart';
+import 'package:ventro_app/features/inventario/controllers/inventario_controller.dart';
 import 'package:ventro_app/features/products/screens/partials/categorias_settings_section.dart';
+import 'package:provider/provider.dart';
 
 class ProductosSettingsSection extends StatefulWidget {
   const ProductosSettingsSection({super.key});
@@ -39,6 +41,76 @@ class _ProductosSettingsSectionState extends State<ProductosSettingsSection> {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Future<void> _abrirModalStockBajo() async {
+    final inventarioCtrl = context.read<InventarioController>();
+    final colors = context.colors;
+
+    await inventarioCtrl.cargarUmbralStockBajo();
+    if (!mounted) return;
+
+    final valorCtrl = TextEditingController(text: inventarioCtrl.umbralStockBajo.toString());
+    String? error;
+
+    await VntlModal.show(
+      context,
+      title: 'Alertas de stock bajo',
+      width: 380,
+      content: StatefulBuilder(
+        builder: (context, setModalState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Te avisaremos cuando un producto tenga menos unidades que este número.',
+                style: VntlText.body.copyWith(color: colors.textSecondary),
+              ),
+              const SizedBox(height: VntlSpacing.lg),
+              VntlInput(
+                label: 'Unidades mínimas',
+                hint: 'Ej. 5',
+                controller: valorCtrl,
+                keyboardType: TextInputType.number,
+                error: error,
+                onChanged: (_) => setModalState(() => error = null),
+              ),
+            ],
+          );
+        },
+      ),
+      actions: [
+        VntlButton(
+          label: 'Cancelar',
+          variant: VntlButtonVariant.ghost,
+          onPressed: () => Navigator.pop(context),
+        ),
+        StatefulBuilder(
+          builder: (context, setModalState) {
+            return VntlButton(
+              label: 'Guardar',
+              onPressed: () async {
+                final valor = int.tryParse(valorCtrl.text.trim());
+                if (valor == null || valor < 0) {
+                  setModalState(() => error = 'Ingresa un número válido');
+                  return;
+                }
+
+                final ok = await inventarioCtrl.guardarUmbralStockBajo(valor);
+                if (ok) {
+                  if (context.mounted) Navigator.pop(context);
+                } else {
+                  setModalState(() => error = 'No se pudo guardar');
+                }
+              },
+            );
+          },
+        ),
+      ],
+    );
+
+    valorCtrl.dispose();
   }
 
   @override
@@ -100,7 +172,13 @@ class _ProductosSettingsSectionState extends State<ProductosSettingsSection> {
                           width: ancho,
                           child: _ProductosOptionCard(
                             opcion: opcion,
-                            onTap: () => setState(() => _subSeccion = opcion.key),
+                            onTap: () {
+                              if (opcion.key == 'alertas_stock') {
+                                _abrirModalStockBajo();
+                              } else {
+                                setState(() => _subSeccion = opcion.key);
+                              }
+                            },
                           ),
                         ),
                     ],

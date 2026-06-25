@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:ventro_app/core/storage/secure_storage.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/auth/services/auth_service.dart';
 
 enum AuthStatus { idle, loading, success, error }

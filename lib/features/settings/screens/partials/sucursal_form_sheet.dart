@@ -69,8 +69,6 @@ class _SucursalFormSheetState extends State<SucursalFormSheet> {
   }
 
   Future<void> _submit() async {
-    final colors = context.colors;
-
     if (!_formKey.currentState!.validate()) return;
     final ctrl = context.read<SettingsController>();
     final data = {
@@ -93,15 +91,17 @@ class _SucursalFormSheetState extends State<SucursalFormSheet> {
     if (!mounted) return;
     if (ok) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(_isEditing ? 'Sucursal actualizada' : 'Sucursal creada'),
-        backgroundColor: colors.success,
-      ));
+      VntlToast.show(
+        context,
+        message: _isEditing ? 'Sucursal actualizada' : 'Sucursal creada',
+        type: VntlToastType.success,
+      );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ctrl.errorMessage ?? 'Error al guardar'),
-        backgroundColor: colors.error,
-      ));
+      VntlToast.show(
+        context,
+        message: ctrl.errorMessage ?? 'Error al guardar',
+        type: VntlToastType.error,
+      );
     }
   }
 

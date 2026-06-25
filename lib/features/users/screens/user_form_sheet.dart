@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/core/network/api_client.dart';
 import 'package:ventro_app/design_system/vntl.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/settings/models/sucursal_model.dart';
 import 'package:ventro_app/features/settings/services/settings_service.dart';
 import 'package:ventro_app/features/users/controllers/users_controller.dart';
@@ -31,9 +31,14 @@ class _UserFormSheetState extends State<UserFormSheet> {
 
   UserRole _role = UserRole.vendedor;
   int? _sucursalId;
-  bool _isSeller = false;
+  bool _sucursalTouched = false; // controla si se muestra el error de "requerido"
 
   bool get _isEditing => widget.existing != null;
+  bool get _requiereSucursal => _role != UserRole.adminEmpresa;
+  // El creador del tenant (is_deletable=false): por seguridad solo se le
+  // permite editar email, teléfono y número de empleado. Nombre, apellido,
+  // rol y sucursal quedan readonly.
+  bool get _isProtected => widget.existing?.isDeletable == false;
 
   @override
   void initState() {
@@ -48,7 +53,6 @@ class _UserFormSheetState extends State<UserFormSheet> {
     _pin = TextEditingController();
     _role = u?.role ?? UserRole.vendedor;
     _sucursalId = u?.sucursalId;
-    _isSeller = u?.isSeller ?? false;
     _loadSucursales();
   }
 
@@ -67,19 +71,46 @@ class _UserFormSheetState extends State<UserFormSheet> {
     } catch (_) {}
   }
 
+  void _onRoleChanged(UserRole r) {
+    setState(() {
+      _role = r;
+      // Si el nuevo rol no requiere sucursal, limpiamos la selección.
+      if (r == UserRole.adminEmpresa) {
+        _sucursalId = null;
+        _sucursalTouched = false;
+      }
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_requiereSucursal && _sucursalId == null) {
+      setState(() => _sucursalTouched = true);
+      VntlToast.show(
+        context,
+        message: 'Selecciona una sucursal para este rol',
+        type: VntlToastType.error,
+      );
+      return;
+    }
+
     final ctrl = context.read<UsersController>();
 
     final data = <String, dynamic>{};
-    data['first_name'] = _firstName.text.trim();
-    data['last_name'] = _lastName.text.trim();
     data['email'] = _email.text.trim();
-    data['role'] = _role.value;
-    data['is_seller'] = _isSeller;
     if (_phone.text.isNotEmpty) data['phone'] = _phone.text.trim();
     if (_employeeNumber.text.isNotEmpty) data['employee_number'] = _employeeNumber.text.trim();
-    if (_sucursalId != null) data['sucursal_id'] = _sucursalId;
+
+    if (!_isProtected) {
+      // Estos campos son readonly para el creador del tenant por seguridad;
+      // no se envían modificados en ese caso, se mandan tal cual están.
+      data['first_name'] = _firstName.text.trim();
+      data['last_name'] = _lastName.text.trim();
+      data['role'] = _role.value;
+      data['is_seller'] = true;
+      data['sucursal_id'] = _sucursalId; // null si es admin_empresa
+    }
 
     bool ok;
     if (_isEditing) {
@@ -92,22 +123,21 @@ class _UserFormSheetState extends State<UserFormSheet> {
     }
 
     if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final successColor = context.colors.success;
-    final errorColor = context.colors.error;
     final errorMsg = ctrl.error ?? 'Error al guardar';
 
     if (ok) {
       Navigator.pop(context);
-      messenger.showSnackBar(SnackBar(
-        content: Text(_isEditing ? 'Usuario actualizado' : 'Usuario creado'),
-        backgroundColor: successColor,
-      ));
+      VntlToast.show(
+        context,
+        message: _isEditing ? 'Usuario actualizado' : 'Usuario creado',
+        type: VntlToastType.success,
+      );
     } else {
-      messenger.showSnackBar(SnackBar(
-        content: Text(errorMsg),
-        backgroundColor: errorColor,
-      ));
+      VntlToast.show(
+        context,
+        message: errorMsg,
+        type: VntlToastType.error,
+      );
     }
   }
 
@@ -129,20 +159,20 @@ class _UserFormSheetState extends State<UserFormSheet> {
         data: {'admin_password': password},
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          accion == 'password'
-              ? 'Correo de restablecimiento enviado'
-              : 'Correo de restablecimiento de PIN enviado',
-        ),
-        backgroundColor: context.colors.success,
-      ));
+      VntlToast.show(
+        context,
+        message: accion == 'password'
+            ? 'Correo de restablecimiento enviado'
+            : 'Correo de restablecimiento de PIN enviado',
+        type: VntlToastType.success,
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Contraseña incorrecta o error al enviar el correo.'),
-        backgroundColor: context.colors.error,
-      ));
+      VntlToast.show(
+        context,
+        message: 'Contraseña incorrecta o error al enviar el correo.',
+        type: VntlToastType.error,
+      );
     }
   }
 
@@ -165,6 +195,7 @@ class _UserFormSheetState extends State<UserFormSheet> {
                 child: VntlInput(
                   label: 'Nombre',
                   controller: _firstName,
+                  enabled: !_isProtected,
                   validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
                 ),
               ),
@@ -173,6 +204,7 @@ class _UserFormSheetState extends State<UserFormSheet> {
                 child: VntlInput(
                   label: 'Apellido',
                   controller: _lastName,
+                  enabled: !_isProtected,
                   validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
                 ),
               ),
@@ -216,12 +248,12 @@ class _UserFormSheetState extends State<UserFormSheet> {
           Text('Rol', style: VntlText.label.copyWith(color: colors.textTertiary)),
           const SizedBox(height: VntlSpacing.md),
           Row(
-            children: UserRole.values.where((r) => r != UserRole.personalizado).map((r) {
+            children: UserRole.values.map((r) {
               final selected = _role == r;
               return Padding(
                 padding: const EdgeInsets.only(right: VntlSpacing.sm),
                 child: GestureDetector(
-                  onTap: () => setState(() => _role = r),
+                  onTap: _isProtected ? null : () => _onRoleChanged(r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(
@@ -229,18 +261,23 @@ class _UserFormSheetState extends State<UserFormSheet> {
                       vertical: VntlSpacing.sm,
                     ),
                     decoration: BoxDecoration(
-                      color:
-                          selected ? colors.primary.withValues(alpha: 0.12) : colors.glassSurface,
+                      color: selected
+                          ? colors.primary.withValues(alpha: _isProtected ? 0.06 : 0.12)
+                          : colors.glassSurface,
                       borderRadius: VntlRadius.mdBorderRadius,
                       border: Border.all(
-                        color: selected ? colors.primary : colors.border,
+                        color: selected
+                            ? colors.primary.withValues(alpha: _isProtected ? 0.5 : 1)
+                            : colors.border,
                         width: selected ? 1 : 0.5,
                       ),
                     ),
                     child: Text(
                       r.label,
                       style: VntlText.label.copyWith(
-                        color: selected ? colors.primary : colors.textSecondary,
+                        color: selected
+                            ? colors.primary.withValues(alpha: _isProtected ? 0.6 : 1)
+                            : colors.textSecondary,
                       ),
                     ),
                   ),
@@ -248,29 +285,40 @@ class _UserFormSheetState extends State<UserFormSheet> {
               );
             }).toList(),
           ),
+          if (_isProtected) ...[
+            const SizedBox(height: VntlSpacing.xs),
+            Text(
+              'El rol del creador de la cuenta no se puede modificar.',
+              style: VntlText.caption.copyWith(color: colors.textTertiary),
+            ),
+          ],
           const SizedBox(height: VntlSpacing.xl),
 
           // ── Asignación ────────────────────────────────────────────
-          Text('Asignación', style: VntlText.label.copyWith(color: colors.textTertiary)),
-          const SizedBox(height: VntlSpacing.md),
-          if (_sucursales.isNotEmpty) ...[
-            _VntlDropdown<int?>(
-              label: 'Sucursal',
-              value: _sucursalId,
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Sin asignar')),
-                ..._sucursales.map((s) => DropdownMenuItem(value: s.id, child: Text(s.nombre))),
-              ],
-              onChanged: (v) => setState(() => _sucursalId = v),
-            ),
-            const SizedBox(height: VntlSpacing.lg),
+          // Admin Empresa ve/gestiona todas las sucursales, no se le asigna una.
+          // Admin Sucursal y Vendedor sí requieren sucursal obligatoria.
+          if (_requiereSucursal) ...[
+            Text('Asignación', style: VntlText.label.copyWith(color: colors.textTertiary)),
+            const SizedBox(height: VntlSpacing.md),
+            if (_sucursales.isNotEmpty) ...[
+              _VntlDropdown<int?>(
+                label: 'Sucursal',
+                value: _sucursalId,
+                items: _sucursales
+                    .map((s) => DropdownMenuItem(value: s.id, child: Text(s.nombre)))
+                    .toList(),
+                onChanged: _isProtected
+                    ? null
+                    : (v) => setState(() {
+                          _sucursalId = v;
+                          _sucursalTouched = true;
+                        }),
+                enabled: !_isProtected,
+                errorText: (_sucursalTouched && _sucursalId == null) ? 'Requerido' : null,
+              ),
+              const SizedBox(height: VntlSpacing.lg),
+            ],
           ],
-          _VntlSwitch(
-            label: 'Es vendedor',
-            subtitle: 'Puede registrar ventas en caja',
-            value: _isSeller,
-            onChanged: (v) => setState(() => _isSeller = v),
-          ),
           const SizedBox(height: VntlSpacing.xl),
 
           // ── Seguridad ─────────────────────────────────────────────
@@ -366,43 +414,60 @@ class _VntlDropdown<T> extends StatelessWidget {
   final String label;
   final T value;
   final List<DropdownMenuItem<T>> items;
-  final void Function(T?) onChanged;
+  final void Function(T?)? onChanged;
+  final String? errorText;
+  final bool enabled;
 
   const _VntlDropdown({
     required this.label,
     required this.value,
     required this.items,
     required this.onChanged,
+    this.errorText,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: VntlText.caption.copyWith(color: colors.textSecondary)),
-        const SizedBox(height: VntlSpacing.xs),
-        Container(
-          decoration: BoxDecoration(
-            color: colors.glassSurface,
-            borderRadius: VntlRadius.mdBorderRadius,
-            border: Border.all(color: colors.border, width: 0.5),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: VntlSpacing.md),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isExpanded: true,
-              dropdownColor: colors.surface,
-              style: VntlText.body.copyWith(color: colors.textPrimary),
-              icon: Icon(Icons.unfold_more_rounded, color: colors.textTertiary, size: 18),
-              items: items,
-              onChanged: onChanged,
+    final hasError = errorText != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.6,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: VntlText.caption.copyWith(color: colors.textSecondary)),
+          const SizedBox(height: VntlSpacing.xs),
+          Container(
+            decoration: BoxDecoration(
+              color: colors.glassSurface,
+              borderRadius: VntlRadius.mdBorderRadius,
+              border: Border.all(
+                color: hasError ? colors.error : colors.border,
+                width: hasError ? 1 : 0.5,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: VntlSpacing.md),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                value: value,
+                isExpanded: true,
+                dropdownColor: colors.surface,
+                style: VntlText.body.copyWith(color: colors.textPrimary),
+                icon: Icon(Icons.unfold_more_rounded, color: colors.textTertiary, size: 18),
+                items: items,
+                onChanged: enabled ? onChanged : null,
+                hint: Text('Selecciona una sucursal',
+                    style: VntlText.body.copyWith(color: colors.textTertiary)),
+              ),
             ),
           ),
-        ),
-      ],
+          if (hasError) ...[
+            const SizedBox(height: VntlSpacing.xs),
+            Text(errorText!, style: VntlText.caption.copyWith(color: colors.error)),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -576,7 +641,7 @@ class _AdminPasswordDialogState extends State<_AdminPasswordDialog> {
                   child: VntlButton(
                     label: 'Cancelar',
                     variant: VntlButtonVariant.ghost,
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ),
                 const SizedBox(width: VntlSpacing.sm),

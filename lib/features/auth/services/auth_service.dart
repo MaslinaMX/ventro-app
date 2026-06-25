@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:ventro_app/core/network/api_client.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 
 class AuthService {
   // Login necesita su propia instancia sin interceptor de token

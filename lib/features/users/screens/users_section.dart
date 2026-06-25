@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
-import 'package:ventro_app/features/auth/models/auth_model.dart';
+import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
+import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/users/controllers/users_controller.dart';
 import 'package:ventro_app/features/users/screens/user_form_sheet.dart';
 import 'package:ventro_app/features/users/services/user_service.dart';
@@ -80,11 +81,11 @@ class _UsersSectionScreenState extends State<UsersSectionScreen> {
     if (confirmed != true || !mounted) return;
     final ok = await _ctrl.delete(user.id);
     if (!mounted) return;
-    final colors2 = context.colors;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'Usuario eliminado' : _ctrl.error ?? 'Error al eliminar'),
-      backgroundColor: ok ? colors2.success : colors2.error,
-    ));
+    VntlToast.show(
+      context,
+      message: ok ? 'Usuario eliminado' : _ctrl.error ?? 'Error al eliminar',
+      type: ok ? VntlToastType.success : VntlToastType.error,
+    );
   }
 
   @override
@@ -93,6 +94,7 @@ class _UsersSectionScreenState extends State<UsersSectionScreen> {
       value: _ctrl,
       child: Consumer<UsersController>(
         builder: (context, ctrl, _) {
+          final currentUserId = context.watch<AuthController>().user?.id;
           return Align(
             alignment: Alignment.topLeft,
             child: SingleChildScrollView(
@@ -136,6 +138,7 @@ class _UsersSectionScreenState extends State<UsersSectionScreen> {
                   else
                     _UserList(
                       users: ctrl.filtered,
+                      currentUserId: currentUserId,
                       onEdit: (u) => _openForm(user: u),
                       onDelete: _confirmDelete,
                       onToggle: (u) => ctrl.toggleActivo(u.id),
@@ -156,12 +159,14 @@ class _UsersSectionScreenState extends State<UsersSectionScreen> {
 
 class _UserList extends StatelessWidget {
   final List<UserModel> users;
+  final int? currentUserId;
   final void Function(UserModel) onEdit;
   final void Function(UserModel) onDelete;
   final void Function(UserModel) onToggle;
 
   const _UserList({
     required this.users,
+    required this.currentUserId,
     required this.onEdit,
     required this.onDelete,
     required this.onToggle,
@@ -181,6 +186,7 @@ class _UserList extends StatelessWidget {
           for (int i = 0; i < users.length; i++) ...[
             _UserTile(
               user: users[i],
+              isSelf: users[i].id == currentUserId,
               onEdit: () => onEdit(users[i]),
               onDelete: () => onDelete(users[i]),
               onToggle: () => onToggle(users[i]),
@@ -200,12 +206,14 @@ class _UserList extends StatelessWidget {
 
 class _UserTile extends StatelessWidget {
   final UserModel user;
+  final bool isSelf;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onToggle;
 
   const _UserTile({
     required this.user,
+    required this.isSelf,
     required this.onEdit,
     required this.onDelete,
     required this.onToggle,
@@ -287,7 +295,7 @@ class _UserTile extends StatelessWidget {
           ),
 
           // Acciones
-          if (user.isDeletable)
+          if (user.isDeletable || isSelf)
             PopupMenuButton<String>(
               color: colors.surface,
               shape: RoundedRectangleBorder(
@@ -309,29 +317,33 @@ class _UserTile extends StatelessWidget {
                     Text('Editar', style: VntlText.body.copyWith(color: colors.textPrimary)),
                   ]),
                 ),
-                PopupMenuItem(
-                  value: 'toggle',
-                  child: Row(children: [
-                    Icon(
-                      user.activo ? Icons.block_rounded : Icons.check_circle_rounded,
-                      size: 15,
-                      color: colors.textSecondary,
-                    ),
-                    const SizedBox(width: VntlSpacing.sm),
-                    Text(
-                      user.activo ? 'Desactivar' : 'Activar',
-                      style: VntlText.body.copyWith(color: colors.textPrimary),
-                    ),
-                  ]),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Row(children: [
-                    Icon(Icons.delete_rounded, size: 15, color: colors.error),
-                    const SizedBox(width: VntlSpacing.sm),
-                    Text('Eliminar', style: VntlText.body.copyWith(color: colors.error)),
-                  ]),
-                ),
+                // El creador del tenant (is_deletable=false) no puede desactivarse
+                // ni eliminarse a sí mismo, solo editar sus datos.
+                if (user.isDeletable) ...[
+                  PopupMenuItem(
+                    value: 'toggle',
+                    child: Row(children: [
+                      Icon(
+                        user.activo ? Icons.block_rounded : Icons.check_circle_rounded,
+                        size: 15,
+                        color: colors.textSecondary,
+                      ),
+                      const SizedBox(width: VntlSpacing.sm),
+                      Text(
+                        user.activo ? 'Desactivar' : 'Activar',
+                        style: VntlText.body.copyWith(color: colors.textPrimary),
+                      ),
+                    ]),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(children: [
+                      Icon(Icons.delete_rounded, size: 15, color: colors.error),
+                      const SizedBox(width: VntlSpacing.sm),
+                      Text('Eliminar', style: VntlText.body.copyWith(color: colors.error)),
+                    ]),
+                  ),
+                ],
               ],
             ),
         ],
