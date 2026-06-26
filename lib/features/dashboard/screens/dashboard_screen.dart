@@ -4,6 +4,7 @@ import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
 import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/caja/screens/caja_operacion_screen.dart';
+import 'package:ventro_app/features/gastos/screens/gastos_screen.dart';
 import 'package:ventro_app/features/inventario/screens/inventario_screen.dart';
 import 'package:ventro_app/features/products/screens/productos_screen.dart';
 import 'package:ventro_app/features/ventas/screens/venta_screen.dart';
@@ -31,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         permiso: 'principal',
       ),
 
-      // Operación diaria
+      // OPERACIÓN DIARIA
       VntlSidebarItem(
         label: 'Caja',
         icon: Icons.point_of_sale_rounded,
@@ -57,14 +58,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         section: 'OPERACIÓN DIARIA',
       ),
 
-      // Catálogo
+      // INVENTARIO
       VntlSidebarItem(
         label: 'Productos',
         icon: Icons.inventory_2_rounded,
         route: '/productos',
         color: colors.navProductos,
         permiso: 'productos',
-        section: 'CATÁLOGO',
+        section: 'INVENTARIO',
       ),
       VntlSidebarItem(
         label: 'Inventario',
@@ -72,7 +73,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         route: '/inventario',
         color: colors.navInventario,
         permiso: 'inventario',
-        section: 'CATÁLOGO',
+        section: 'INVENTARIO',
+      ),
+      VntlSidebarItem(
+        label: 'Proveedores',
+        icon: Icons.local_shipping_rounded,
+        route: '/proveedores',
+        color: colors.navProveedores,
+        permiso: 'proveedores',
+        section: 'INVENTARIO',
+      ),
+
+      // ADMINISTRACIÓN
+      VntlSidebarItem(
+        label: 'Gastos',
+        icon: Icons.add_shopping_cart_rounded,
+        route: '/gastos',
+        color: colors.navCompras,
+        permiso: 'gastos',
+        section: 'ADMINISTRACIÓN',
       ),
       VntlSidebarItem(
         label: 'Cotizaciones',
@@ -80,35 +99,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         route: '/cotizaciones',
         color: colors.navCotizaciones,
         permiso: 'cotizaciones',
-        section: 'CATÁLOGO',
+        section: 'ADMINISTRACIÓN',
       ),
-
-      // Cadena de suministro
-      VntlSidebarItem(
-        label: 'Proveedores',
-        icon: Icons.local_shipping_rounded,
-        route: '/proveedores',
-        color: colors.navProveedores,
-        permiso: 'proveedores',
-        section: 'CADENA DE SUMINISTRO',
-      ),
-      VntlSidebarItem(
-        label: 'Compras',
-        icon: Icons.add_shopping_cart_rounded,
-        route: '/compras',
-        color: colors.navCompras,
-        permiso: 'compras',
-        section: 'CADENA DE SUMINISTRO',
-      ),
-
-      // Personas y análisis
       VntlSidebarItem(
         label: 'Clientes',
         icon: Icons.people_rounded,
         route: '/clientes',
         color: colors.navClientes,
         permiso: 'clientes',
-        section: 'PERSONAS Y ANÁLISIS',
+        section: 'ADMINISTRACIÓN',
       ),
       VntlSidebarItem(
         label: 'Reportes',
@@ -116,7 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         route: '/reportes',
         color: colors.navReportes,
         permiso: 'reportes',
-        section: 'PERSONAS Y ANÁLISIS',
+        section: 'ADMINISTRACIÓN',
       ),
     ];
   }
@@ -131,8 +130,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'cotizaciones',
       'productos',
       'ventas',
-      'clientes'
+      'clientes',
     };
+
     return _allSidebarItems.where((item) => permitidosVendedor.contains(item.permiso)).toList();
   }
 
@@ -143,29 +143,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildCurrentScreen() {
     switch (_currentRoute) {
       case '/principal':
-        return _Placeholder(label: 'Principal', icon: Icons.speed_rounded);
+        return _Placeholder(
+          label: 'Principal',
+          icon: Icons.speed_rounded,
+        );
+
       case '/caja':
         return const CajaOperacionScreen();
+
       case '/cotizaciones':
-        return _Placeholder(label: 'Cotizaciones', icon: Icons.receipt_long_rounded);
+        return _Placeholder(
+          label: 'Cotizaciones',
+          icon: Icons.receipt_long_rounded,
+        );
+
       case '/productos':
         return const ProductosScreen();
+
       case '/ventas':
         return const VentaScreen();
+
       case '/pedidos':
-        return _Placeholder(label: 'Pedidos', icon: Icons.checklist_rounded);
+        return _Placeholder(
+          label: 'Pedidos',
+          icon: Icons.checklist_rounded,
+        );
+
       case '/clientes':
-        return _Placeholder(label: 'Clientes', icon: Icons.people_rounded);
+        return _Placeholder(
+          label: 'Clientes',
+          icon: Icons.people_rounded,
+        );
+
       case '/inventario':
-        return InventarioScreen(onNavigateToProductos: () => _onRouteSelected('/productos'));
+        return InventarioScreen(
+          onNavigateToProductos: () => _onRouteSelected('/productos'),
+        );
+
       case '/proveedores':
-        return _Placeholder(label: 'Proveedores', icon: Icons.local_shipping_rounded);
-      case '/compras':
-        return _Placeholder(label: 'Compras', icon: Icons.add_shopping_cart_rounded);
+        return _Placeholder(
+          label: 'Proveedores',
+          icon: Icons.local_shipping_rounded,
+        );
+
+      case '/gastos':
+        return const GastosScreen();
+
       case '/reportes':
-        return _Placeholder(label: 'Reportes', icon: Icons.bar_chart_rounded);
+        return _Placeholder(
+          label: 'Reportes',
+          icon: Icons.bar_chart_rounded,
+        );
+
       default:
-        return _Placeholder(label: 'Principal', icon: Icons.speed_rounded);
+        return _Placeholder(
+          label: 'Principal',
+          icon: Icons.speed_rounded,
+        );
     }
   }
 
@@ -176,20 +210,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final items = _filteredItems(user);
 
-    // Si la ruta actual ya no está disponible, ir a la primera
     if (!items.any((i) => i.route == _currentRoute) && items.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() => _currentRoute = items.first.route);
       });
     }
 
-    final currentTitle =
-        items.firstWhere((i) => i.route == _currentRoute, orElse: () => items.first).label;
+    final currentTitle = items
+        .firstWhere(
+          (i) => i.route == _currentRoute,
+          orElse: () => items.first,
+        )
+        .label;
 
     return VntlLayout(
       title: currentTitle,
       currentRoute: _currentRoute,
-      sidebarItems: items, // ← filtrados, no _allSidebarItems
+      sidebarItems: items,
       onRouteSelected: _onRouteSelected,
       showUserMenu: true,
       forceCollapsed: _currentRoute == '/ventas',
@@ -198,27 +235,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// Placeholder temporal para cada sección
 class _Placeholder extends StatelessWidget {
   final String label;
   final IconData icon;
 
-  const _Placeholder({required this.label, required this.icon});
+  const _Placeholder({
+    required this.label,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: colors.textTertiary),
+          Icon(
+            icon,
+            size: 48,
+            color: colors.textTertiary,
+          ),
           const SizedBox(height: VntlSpacing.lg),
-          Text(label, style: VntlText.h3),
+          Text(
+            label,
+            style: VntlText.h3,
+          ),
           const SizedBox(height: VntlSpacing.sm),
           Text(
             'Próximamente',
-            style: VntlText.body.copyWith(color: colors.textSecondary),
+            style: VntlText.body.copyWith(
+              color: colors.textSecondary,
+            ),
           ),
         ],
       ),

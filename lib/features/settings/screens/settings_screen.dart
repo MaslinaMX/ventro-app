@@ -4,9 +4,11 @@ import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
 import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/caja/screens/cajas_settings_section.dart';
+import 'package:ventro_app/features/gastos/screens/categorias_gasto_settings_section.dart';
 import 'package:ventro_app/features/metodos_pago/screens/metodos_pago_settings_section.dart';
 import 'package:ventro_app/features/settings/screens/partials/general_section.dart';
 import 'package:ventro_app/features/settings/screens/partials/sucursales_sections.dart';
+import 'package:ventro_app/features/tickets/screens/tickets_settings_section.dart';
 import 'package:ventro_app/features/users/screens/users_section.dart';
 import 'package:ventro_app/features/products/screens/partials/productos_settings_section.dart';
 
@@ -44,7 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _SettingsItem(label: 'Cajas', icon: Icons.point_of_sale_rounded, key: 'cajas'),
     _SettingsItem(label: 'Productos', icon: Icons.inventory_2_rounded, key: 'productos'),
     _SettingsItem(label: 'Facturación', icon: Icons.receipt_rounded, key: 'facturacion'),
-    // _SettingsItem(label: 'Lista de precios', icon: Icons.sell_rounded, key: 'precios'),
+    _SettingsItem(label: 'Gastos', icon: Icons.sell_rounded, key: 'gastos'),
     _SettingsItem(label: 'Métodos de pago', icon: Icons.credit_card_rounded, key: 'pagos'),
     _SettingsItem(label: 'Tickets', icon: Icons.print_rounded, key: 'tickets'),
   ];
@@ -65,6 +67,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return const CajasSettingsSection();
       case 'pagos':
         return const MetodosPagoSettingsSection();
+      case 'gastos':
+        return const CategoriasGastoSettingsSection();
+      case 'tickets':
+        return const TicketsSettingsSection();
       default:
         return _SettingsPlaceholder(
           section: _currentItem.label,

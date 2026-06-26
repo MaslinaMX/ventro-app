@@ -4,6 +4,7 @@ import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
 import 'package:ventro_app/features/ventas/models/carrito_item_model.dart';
 import 'package:ventro_app/design_system/helpers/vntl_category_style.dart';
+import 'package:ventro_app/features/ventas/widgets/cobro_sheet.dart';
 
 class CarritoPanel extends StatelessWidget {
   final ScrollController? scrollController;
@@ -14,6 +15,19 @@ class CarritoPanel extends StatelessWidget {
     this.scrollController,
     this.isFullWidth = false,
   });
+
+  Future<void> _abrirCobro(BuildContext context) async {
+    final venta = await VntlModal.show<Map<String, dynamic>>(
+      context,
+      title: 'Cobrar',
+      width: 420,
+      content: const CobroSheet(),
+    );
+    if (venta != null && context.mounted) {
+      VntlToast.show(context, message: 'Venta registrada con éxito', type: VntlToastType.success);
+      // TODO: aquí seguirá la generación del ticket PDF
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,9 +110,7 @@ class CarritoPanel extends StatelessWidget {
                     child: VntlButton(
                       label: 'Cobrar',
                       icon: Icons.payments_rounded,
-                      onPressed: () {
-                        // TODO: Fase 3 — pantalla de cobro / métodos de pago
-                      },
+                      onPressed: () => _abrirCobro(context),
                     ),
                   ),
                 ],

@@ -276,10 +276,12 @@ class _ProductosOption {
     required this.label,
     required this.description,
     required this.icon,
+    this.color,
   });
 
   final String key;
   final String label;
   final String description;
   final IconData icon;
+  final Color? color;
 }

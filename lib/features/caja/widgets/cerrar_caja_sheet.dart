@@ -45,7 +45,7 @@ class _CerrarCajaSheetState extends State<CerrarCajaSheet> {
         message: diferencia == 0
             ? 'Caja cerrada sin diferencias'
             : 'Caja cerrada. Diferencia: \$${diferencia.toStringAsFixed(2)}',
-        type: diferencia == 0 ? VntlToastType.success : VntlToastType.warning,
+        type: diferencia == 0 ? VntlToastType.info : VntlToastType.warning,
       );
     } else {
       VntlToast.show(

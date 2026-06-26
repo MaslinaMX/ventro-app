@@ -24,6 +24,8 @@ export 'components/vntl_table.dart';
 export 'components/vntl_switch.dart';
 
 export 'helpers/vntl_category_style.dart';
+export 'helpers/vntl_gasto_icon_style.dart';
+export 'helpers/vntl_payment_style.dart';
 
 extension VntlTheme on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;

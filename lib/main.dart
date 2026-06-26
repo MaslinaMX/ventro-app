@@ -10,12 +10,15 @@ import 'package:ventro_app/features/auth/screens/blocked_screen.dart';
 import 'package:ventro_app/features/caja/controllers/caja_controller.dart';
 import 'package:ventro_app/features/caja/controllers/sesion_caja_controller.dart';
 import 'package:ventro_app/features/dashboard/screens/dashboard_screen.dart';
+import 'package:ventro_app/features/gastos/controllers/categoria_gasto_controller.dart';
+import 'package:ventro_app/features/gastos/controllers/gasto_controller.dart';
 import 'package:ventro_app/features/inventario/controllers/inventario_controller.dart';
 import 'package:ventro_app/features/metodos_pago/controllers/metodo_pago_controller.dart';
 import 'package:ventro_app/features/products/controllers/producto_controller.dart';
 import 'package:ventro_app/features/settings/controllers/settings_controller.dart';
 import 'package:ventro_app/features/settings/screens/my_profile_screen.dart';
 import 'package:ventro_app/features/settings/screens/settings_screen.dart';
+import 'package:ventro_app/features/tickets/controllers/configuracion_ticket_controller.dart';
 import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/screens/welcome_screen.dart';
@@ -55,6 +58,9 @@ class VentroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MetodoPagoController()),
         ChangeNotifierProvider(create: (_) => SesionCajaController()),
         ChangeNotifierProvider(create: (_) => VentaController()),
+        ChangeNotifierProvider(create: (_) => GastoController()),
+        ChangeNotifierProvider(create: (_) => CategoriaGastoController()),
+        ChangeNotifierProvider(create: (_) => ConfiguracionTicketController()),
       ],
       child: // En main.dart — reemplaza el routes por onGenerateRoute
           MaterialApp(
