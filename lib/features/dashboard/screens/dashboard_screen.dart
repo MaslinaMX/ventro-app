@@ -4,9 +4,11 @@ import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
 import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/caja/screens/caja_operacion_screen.dart';
+import 'package:ventro_app/features/dashboard/screens/principal_screen.dart';
 import 'package:ventro_app/features/gastos/screens/gastos_screen.dart';
 import 'package:ventro_app/features/inventario/screens/inventario_screen.dart';
 import 'package:ventro_app/features/products/screens/productos_screen.dart';
+import 'package:ventro_app/features/ventas/screens/todas_ventas_screen.dart';
 import 'package:ventro_app/features/ventas/screens/venta_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -18,6 +20,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String _currentRoute = '/principal';
+
+  // Rutas a las que se puede navegar (ej. desde tarjetas del dashboard)
+  // pero que NO aparecen como opción en el sidebar.
+  static const _rutasOcultas = {'/ventas-todas'};
 
   List<VntlSidebarItem> get _allSidebarItems {
     final colors = context.colors;
@@ -143,9 +149,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildCurrentScreen() {
     switch (_currentRoute) {
       case '/principal':
-        return _Placeholder(
-          label: 'Principal',
-          icon: Icons.speed_rounded,
+        return PrincipalScreen(
+          onNavigateToGastos: () => _onRouteSelected('/gastos'),
+          onNavigateToVentasTodas: () => _onRouteSelected('/ventas-todas'),
         );
 
       case '/caja':
@@ -161,7 +167,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return const ProductosScreen();
 
       case '/ventas':
-        return const VentaScreen();
+        return VentaScreen(
+          onNavigateACaja: () => _onRouteSelected('/caja'),
+        );
 
       case '/pedidos':
         return _Placeholder(
@@ -189,6 +197,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case '/gastos':
         return const GastosScreen();
 
+      case '/ventas-todas':
+        return const TodasVentasScreen();
+
       case '/reportes':
         return _Placeholder(
           label: 'Reportes',
@@ -210,18 +221,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final items = _filteredItems(user);
 
-    if (!items.any((i) => i.route == _currentRoute) && items.isNotEmpty) {
+    final rutaValida =
+        items.any((i) => i.route == _currentRoute) || _rutasOcultas.contains(_currentRoute);
+
+    if (!rutaValida && items.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() => _currentRoute = items.first.route);
       });
     }
 
-    final currentTitle = items
-        .firstWhere(
-          (i) => i.route == _currentRoute,
-          orElse: () => items.first,
-        )
-        .label;
+    final currentTitle = _currentRoute == '/ventas-todas'
+        ? 'Todas las ventas'
+        : items
+            .firstWhere(
+              (i) => i.route == _currentRoute,
+              orElse: () => items.first,
+            )
+            .label;
 
     return VntlLayout(
       title: currentTitle,
@@ -229,7 +245,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       sidebarItems: items,
       onRouteSelected: _onRouteSelected,
       showUserMenu: true,
-      forceCollapsed: _currentRoute == '/ventas',
       child: _buildCurrentScreen(),
     );
   }

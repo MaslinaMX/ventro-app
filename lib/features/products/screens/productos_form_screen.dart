@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/products/controllers/producto_controller.dart';
 import 'package:ventro_app/features/products/models/categoria_model.dart';
 import 'package:ventro_app/features/products/models/producto_model.dart';
-import 'package:ventro_app/features/products/models/producto_variante_imagen_model.dart';
 import 'package:ventro_app/features/products/models/producto_variante_model.dart';
 import 'package:ventro_app/features/products/models/variante_stock_inicial.dart';
 import 'package:ventro_app/features/products/widgets/variante_editor_modal.dart';

@@ -31,6 +31,7 @@ class PagoFormModel {
     return {
       'metodo_pago_id': metodoPago.id,
       'monto': monto,
+      if (esEfectivo) 'recibido': double.tryParse(recibidoCtrl.text) ?? monto,
       if (referencia.isNotEmpty) 'referencia': referencia,
     };
   }

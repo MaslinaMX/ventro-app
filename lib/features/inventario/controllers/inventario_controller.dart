@@ -15,7 +15,6 @@ class InventarioController extends ChangeNotifier {
   int? _sucursalId;
 
   /// Umbral configurable para "stock bajo". Default: 5.
-  /// TODO: cuando exista la pantalla de "Alertas de stock" en Settings,
   /// este valor debe cargarse desde la configuración del tenant.
   int umbralStockBajo = 5;
 
@@ -26,6 +25,7 @@ class InventarioController extends ChangeNotifier {
   String? get error => _error;
   String? get movimientosError => _movimientosError;
   int? get sucursalId => _sucursalId;
+
   bool isLoadingUmbral = false;
 
   int get totalProductos => _stock.length;
@@ -44,6 +44,7 @@ class InventarioController extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
+
     try {
       _stock = await _service.getStockPorSucursal(sucursalId, search: search);
     } catch (e) {
@@ -52,6 +53,7 @@ class InventarioController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+
     await cargarMovimientos(sucursalId);
   }
 
@@ -59,6 +61,7 @@ class InventarioController extends ChangeNotifier {
     _isLoadingMovimientos = true;
     _movimientosError = null;
     notifyListeners();
+
     try {
       _movimientos = await _service.getMovimientosPorSucursal(sucursalId);
     } catch (e) {
@@ -85,6 +88,7 @@ class InventarioController extends ChangeNotifier {
 
     final type = diferencia > 0 ? 'in' : 'out';
     final cantidad = diferencia.abs();
+
     try {
       await _service.registrarMovimiento(
         varianteId: varianteId,
@@ -129,5 +133,14 @@ class InventarioController extends ChangeNotifier {
     int? sucursalId,
   }) {
     return _service.getMovimientosPorVariante(varianteId, sucursalId: sucursalId);
+  }
+
+  /// Trae movimientos con filtros opcionales. Si ambos son null, trae
+  /// todos los movimientos del tenant (sin filtrar por producto ni sucursal).
+  Future<List<MovimientoInventarioModel>> obtenerMovimientos({
+    int? varianteId,
+    int? sucursalId,
+  }) {
+    return _service.getMovimientos(varianteId: varianteId, sucursalId: sucursalId);
   }
 }

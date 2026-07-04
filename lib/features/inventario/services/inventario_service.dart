@@ -18,7 +18,6 @@ class InventarioService {
         if (search != null && search.isNotEmpty) 'search': search,
       },
     );
-
     final List data = response.data as List;
     return data.map((e) => InventarioStockModel.fromJson(Map<String, dynamic>.from(e))).toList();
   }
@@ -32,7 +31,6 @@ class InventarioService {
       '/inventario/sucursales/$sucursalId/movimientos',
       queryParameters: {'page': page},
     );
-
     final List data = response.data['data'] as List;
     return data
         .map((e) => MovimientoInventarioModel.fromJson(Map<String, dynamic>.from(e)))
@@ -56,7 +54,6 @@ class InventarioService {
       'cantidad': cantidad,
       if (notas != null && notas.isNotEmpty) 'notas': notas,
     });
-
     return MovimientoInventarioModel.fromJson(
       Map<String, dynamic>.from(response.data),
     );
@@ -84,6 +81,29 @@ class InventarioService {
       queryParameters: {
         if (sucursalId != null) 'sucursal_id': sucursalId,
         'per_page': 100,
+      },
+    );
+    final List data = response.data['data'] as List;
+    return data
+        .map((e) => MovimientoInventarioModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  /// Historial de movimientos con filtros opcionales de producto y/o sucursal.
+  /// Si ambos son null, trae todos los movimientos del tenant.
+  /// Requiere el endpoint GET /inventario/movimientos en el backend
+  /// (ver nota abajo — este endpoint aún no existe en tu Laravel).
+  Future<List<MovimientoInventarioModel>> getMovimientos({
+    int? varianteId,
+    int? sucursalId,
+    int perPage = 50,
+  }) async {
+    final response = await _dio.get(
+      '/inventario/movimientos',
+      queryParameters: {
+        if (varianteId != null) 'variante_id': varianteId,
+        if (sucursalId != null) 'sucursal_id': sucursalId,
+        'per_page': perPage,
       },
     );
     final List data = response.data['data'] as List;

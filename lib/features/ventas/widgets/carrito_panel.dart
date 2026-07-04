@@ -5,6 +5,7 @@ import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
 import 'package:ventro_app/features/ventas/models/carrito_item_model.dart';
 import 'package:ventro_app/design_system/helpers/vntl_category_style.dart';
 import 'package:ventro_app/features/ventas/widgets/cobro_sheet.dart';
+import 'package:ventro_app/features/ventas/widgets/descuento_sheet.dart';
 
 class CarritoPanel extends StatelessWidget {
   final ScrollController? scrollController;
@@ -25,8 +26,16 @@ class CarritoPanel extends StatelessWidget {
     );
     if (venta != null && context.mounted) {
       VntlToast.show(context, message: 'Venta registrada con éxito', type: VntlToastType.success);
-      // TODO: aquí seguirá la generación del ticket PDF
     }
+  }
+
+  Future<void> _abrirDescuento(BuildContext context) async {
+    await VntlModal.show(
+      context,
+      title: 'Descuento',
+      width: 380,
+      content: const DescuentoSheet(),
+    );
   }
 
   @override
@@ -62,12 +71,25 @@ class CarritoPanel extends StatelessWidget {
               children: [
                 Text('Carrito', style: VntlText.h4),
                 if (ctrl.carrito.isNotEmpty)
-                  GestureDetector(
-                    onTap: ctrl.vaciarCarrito,
-                    child: Text(
-                      'Vaciar',
-                      style: VntlText.caption.copyWith(color: colors.error),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _abrirDescuento(context),
+                        child: Text(
+                          'Descuento',
+                          style: VntlText.caption.copyWith(color: colors.info),
+                        ),
+                      ),
+                      const SizedBox(width: VntlSpacing.md),
+                      GestureDetector(
+                        onTap: ctrl.vaciarCarrito,
+                        child: Text(
+                          'Vaciar',
+                          style: VntlText.caption.copyWith(color: colors.error),
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -94,6 +116,31 @@ class CarritoPanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (ctrl.descuentoActivo) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Subtotal',
+                            style: VntlText.caption.copyWith(color: colors.textTertiary)),
+                        Text(
+                          '\$${ctrl.subtotalCarrito.toStringAsFixed(2)}',
+                          style: VntlText.caption.copyWith(color: colors.textTertiary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: VntlSpacing.xs),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Descuento', style: VntlText.caption.copyWith(color: colors.info)),
+                        Text(
+                          '-\$${ctrl.descuentoMonto.toStringAsFixed(2)}',
+                          style: VntlText.caption.copyWith(color: colors.info),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: VntlSpacing.sm),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

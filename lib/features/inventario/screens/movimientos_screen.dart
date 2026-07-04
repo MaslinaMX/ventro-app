@@ -27,7 +27,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
   List<SucursalModel> _sucursales = [];
   int? _sucursalSeleccionadaId; // null = todas las sucursales
 
-  ProductoVarianteModel? _varianteSeleccionada;
+  ProductoVarianteModel? _varianteSeleccionada; // null = todos los productos
   String? _productoNombreSeleccionado;
 
   List<MovimientoInventarioModel> _movimientos = [];
@@ -58,12 +58,14 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
     }
 
     if (mounted) setState(() => _cargandoInicial = false);
+
+    await _cargarMovimientos();
   }
 
   Future<void> _abrirSelectorProducto() async {
     final productoCtrl = context.read<ProductoController>();
 
-    final seleccion = await showDialog<ProductoVarianteModel>(
+    final seleccion = await showDialog<Object>(
       context: context,
       builder: (dialogContext) => Align(
         alignment: Alignment.topCenter,
@@ -77,16 +79,26 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
       ),
     );
 
-    if (seleccion != null) {
-      final producto = productoCtrl.productos.firstWhere(
-        (p) => p.variantes.any((v) => v.id == seleccion.id),
-      );
+    if (seleccion == null) return; // cancelado, no cambia nada
+
+    if (seleccion == 'TODOS') {
       setState(() {
-        _varianteSeleccionada = seleccion;
-        _productoNombreSeleccionado = producto.nombre;
+        _varianteSeleccionada = null;
+        _productoNombreSeleccionado = null;
       });
       await _cargarMovimientos();
+      return;
     }
+
+    final varianteSel = seleccion as ProductoVarianteModel;
+    final producto = productoCtrl.productos.firstWhere(
+      (p) => p.variantes.any((v) => v.id == varianteSel.id),
+    );
+    setState(() {
+      _varianteSeleccionada = varianteSel;
+      _productoNombreSeleccionado = producto.nombre;
+    });
+    await _cargarMovimientos();
   }
 
   Future<void> _abrirSelectorSucursal() async {
@@ -116,8 +128,6 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
   }
 
   Future<void> _cargarMovimientos() async {
-    if (_varianteSeleccionada == null) return;
-
     setState(() {
       _cargandoMovimientos = true;
       _error = null;
@@ -125,8 +135,8 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
 
     try {
       final inventarioCtrl = context.read<InventarioController>();
-      _movimientos = await inventarioCtrl.obtenerMovimientosPorVariante(
-        _varianteSeleccionada!.id,
+      _movimientos = await inventarioCtrl.obtenerMovimientos(
+        varianteId: _varianteSeleccionada?.id,
         sucursalId: _sucursalSeleccionadaId,
       );
     } catch (e) {
@@ -148,6 +158,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
     return valor % 1 == 0 ? valor.toInt().toString() : valor.toString();
   }
 
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
@@ -203,10 +214,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
                       },
                     ),
                     const SizedBox(height: VntlSpacing.xl),
-                    if (_varianteSeleccionada == null)
-                      _buildEstadoVacio(colors)
-                    else
-                      _buildTablaMovimientos(colors),
+                    _buildTablaMovimientos(colors),
                   ],
                 ),
               ),
@@ -235,12 +243,9 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
                 Expanded(
                   child: Text(
                     _varianteSeleccionada == null
-                        ? 'Selecciona un producto'
+                        ? 'Todos los productos'
                         : '$_productoNombreSeleccionado — ${_varianteSeleccionada!.nombre}',
-                    style: VntlText.body.copyWith(
-                      color:
-                          _varianteSeleccionada == null ? colors.textTertiary : colors.textPrimary,
-                    ),
+                    style: VntlText.body.copyWith(color: colors.textPrimary),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -290,28 +295,6 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
     );
   }
 
-  Widget _buildEstadoVacio(dynamic colors) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(VntlSpacing.xl * 1.5),
-      decoration: BoxDecoration(
-        color: colors.glassSurface,
-        borderRadius: VntlRadius.lgBorderRadius,
-        border: Border.all(color: colors.border, width: 0.5),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.search_rounded, size: 48, color: colors.textTertiary),
-          const SizedBox(height: VntlSpacing.lg),
-          Text(
-            'Selecciona un producto para ver su historial',
-            style: VntlText.h4,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTablaMovimientos(dynamic colors) {
     if (_error != null) {
       return Text(_error!, style: VntlText.body.copyWith(color: colors.error));
@@ -320,7 +303,7 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
     return VntlTable<MovimientoInventarioModel>(
       isLoading: _cargandoMovimientos,
       items: _movimientos,
-      emptyLabel: 'Sin movimientos registrados para este producto',
+      emptyLabel: 'Sin movimientos registrados',
       columns: [
         VntlTableColumn(
           label: 'Fecha',
@@ -329,6 +312,25 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
           cellBuilder: (m) => Text(
             _formatFecha(m.createdAt),
             style: VntlText.body.copyWith(color: colors.textSecondary),
+          ),
+        ),
+        VntlTableColumn(
+          label: 'Producto',
+          flex: 2,
+          sortValue: (m) => m.productoNombre ?? '',
+          cellBuilder: (m) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(m.productoNombre ?? '—', style: VntlText.body),
+              if (m.varianteNombre != null && m.varianteNombre!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  m.varianteNombre!,
+                  style: VntlText.caption.copyWith(color: colors.textTertiary),
+                ),
+              ],
+            ],
           ),
         ),
         VntlTableColumn(
@@ -363,8 +365,9 @@ class _MovimientosScreenState extends State<MovimientosScreen> {
         VntlTableColumn(
           label: 'Motivo',
           flex: 3,
+          sortValue: (m) => m.notas != null && m.notas!.isNotEmpty ? m.notas! : m.reason.label,
           cellBuilder: (m) => Text(
-            m.notas ?? '—',
+            m.notas != null && m.notas!.isNotEmpty ? m.notas! : m.reason.label,
             style: VntlText.body.copyWith(color: colors.textSecondary),
             overflow: TextOverflow.ellipsis,
           ),
@@ -425,6 +428,12 @@ class _ProductoSearchListState extends State<_ProductoSearchList> {
           onChanged: _filtrar,
         ),
         const SizedBox(height: VntlSpacing.md),
+        ListTile(
+          leading: Icon(Icons.apps_rounded, color: colors.textSecondary),
+          title: Text('Todos los productos', style: VntlText.body),
+          onTap: () => Navigator.pop(context, 'TODOS'),
+        ),
+        Divider(color: colors.border, height: 0.5),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 360),
           child: _filtrados.isEmpty

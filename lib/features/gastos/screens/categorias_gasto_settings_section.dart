@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/gastos/controllers/categoria_gasto_controller.dart';
 import 'package:ventro_app/features/gastos/models/categoria_gasto_model.dart';
-import 'package:ventro_app/features/gastos/services/categoria_gasto_service.dart';
 
 class CategoriasGastoSettingsSection extends StatefulWidget {
   const CategoriasGastoSettingsSection({super.key});
@@ -20,7 +19,7 @@ class _CategoriasGastoSettingsSectionState extends State<CategoriasGastoSettings
     super.didChangeDependencies();
     if (!_loaded) {
       _loaded = true;
-      CategoriaGastoController().cargarCategorias();
+      context.read<CategoriaGastoController>().cargarCategorias();
     }
   }
 
@@ -58,7 +57,7 @@ class _CategoriasGastoSettingsSectionState extends State<CategoriasGastoSettings
                 builder: (context) {
                   final resultados = VntlGastoIconStyle.buscar(busquedaIconoCtrl.text);
                   final mostrados = busquedaIconoCtrl.text.trim().isEmpty
-                      ? resultados.take(30).toList()
+                      ? resultados.take(91).toList()
                       : resultados;
 
                   if (mostrados.isEmpty) {

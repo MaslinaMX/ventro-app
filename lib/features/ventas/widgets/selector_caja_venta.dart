@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/caja/models/caja_model.dart';
 import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
+import 'package:ventro_app/features/ventas/widgets/ventas_sesion_section.dart';
 
 class SelectorCajaVenta extends StatefulWidget {
-  const SelectorCajaVenta({super.key});
+  final VoidCallback? onIrACaja;
+  const SelectorCajaVenta({super.key, this.onIrACaja});
 
   @override
   State<SelectorCajaVenta> createState() => _SelectorCajaVentaState();
@@ -48,10 +50,10 @@ class _SelectorCajaVentaState extends State<SelectorCajaVenta> {
             ),
             const SizedBox(height: VntlSpacing.xl),
             VntlButton(
-              label: 'Reintentar',
-              icon: Icons.refresh_rounded,
+              label: 'Abrir Caja',
+              icon: Icons.point_of_sale_rounded,
               variant: VntlButtonVariant.ghost,
-              onPressed: ctrl.cargarCajasAbiertas,
+              onPressed: widget.onIrACaja,
             ),
           ],
         ),
@@ -82,6 +84,7 @@ class _SelectorCajaVentaState extends State<SelectorCajaVenta> {
                       ))
                   .toList(),
             ),
+            const VentasSesionSection(),
           ],
         ),
       ),

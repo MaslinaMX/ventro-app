@@ -11,7 +11,8 @@ import 'package:ventro_app/features/ventas/widgets/selector_caja_venta.dart';
 import 'package:ventro_app/features/ventas/widgets/verificar_empleado_venta.dart';
 
 class VentaScreen extends StatefulWidget {
-  const VentaScreen({super.key});
+  final VoidCallback? onNavigateACaja; // ← agregar
+  const VentaScreen({super.key, this.onNavigateACaja});
 
   @override
   State<VentaScreen> createState() => _VentaScreenState();
@@ -90,7 +91,9 @@ class _VentaScreenState extends State<VentaScreen> {
 
     // ─── Paso 1: seleccionar caja con sesión abierta ─────────────────────────
     if (ctrl.cajaId == null) {
-      return const SelectorCajaVenta();
+      return SelectorCajaVenta(
+        onIrACaja: widget.onNavigateACaja,
+      );
     }
 
     // ─── Paso 2: verificar número de empleado + PIN ──────────────────────────
@@ -105,7 +108,7 @@ class _VentaScreenState extends State<VentaScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final grid = Column(
+    final contenido = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -198,24 +201,28 @@ class _VentaScreenState extends State<VentaScreen> {
       ],
     );
 
-    if (isMobile) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: grid,
-        floatingActionButton: ctrl.carrito.isEmpty
-            ? null
-            : _CarritoFab(
-                cantidad: ctrl.cantidadItemsCarrito,
-                total: ctrl.totalCarrito,
-                onTap: () => _abrirCarritoMovil(context),
-              ),
-      );
-    }
-    return Row(
-      children: [
-        Expanded(child: grid),
-        const CarritoPanel(),
-      ],
+    final pantalla = isMobile
+        ? Scaffold(
+            backgroundColor: Colors.transparent,
+            body: contenido,
+            floatingActionButton: ctrl.carrito.isEmpty
+                ? null
+                : _CarritoFab(
+                    cantidad: ctrl.cantidadItemsCarrito,
+                    total: ctrl.totalCarrito,
+                    onTap: () => _abrirCarritoMovil(context),
+                  ),
+          )
+        : Row(
+            children: [
+              Expanded(child: contenido),
+              const CarritoPanel(),
+            ],
+          );
+
+    return Listener(
+      onPointerDown: (_) => ctrl.registrarActividad(),
+      child: pantalla,
     );
   }
 }

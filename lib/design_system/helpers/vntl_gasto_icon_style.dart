@@ -68,6 +68,90 @@ class VntlGastoIconStyle {
     'warning_gasto': Icons.warning_amber_rounded,
     'circle_gasto': Icons.circle_rounded,
     'star_gasto': Icons.star_rounded,
+
+    // --- Ampliación: catálogo sugerido de categorías de gasto ---
+
+    // Insumos y compras operativas (ampliación)
+    'insumos': Icons.shopping_basket_rounded,
+    'materia_prima': Icons.archive_rounded,
+    'inventario_almacen': Icons.warehouse_rounded,
+    'papeleria': Icons.description_rounded,
+    'empaque': Icons.all_inbox_rounded,
+    'limpieza': Icons.cleaning_services_rounded,
+    'herramientas': Icons.build_rounded,
+    'uniformes': Icons.checkroom_rounded,
+
+    // Nómina y personal (ampliación)
+    'honorarios': Icons.person_rounded,
+    'comisiones': Icons.percent_rounded,
+    'prestaciones': Icons.card_giftcard_rounded,
+    'capacitacion': Icons.school_rounded,
+    'viaticos': Icons.luggage_rounded,
+
+    // Instalaciones (ampliación)
+    'remodelaciones': Icons.format_paint_rounded,
+    'seguridad_instalaciones': Icons.security_rounded,
+    'jardineria': Icons.grass_rounded,
+
+    // Servicios (ampliación)
+    'hosting': Icons.dns_rounded,
+    'software_licencias': Icons.vpn_key_rounded,
+    'nube': Icons.cloud_rounded,
+
+    // Transporte (ampliación)
+    'peajes': Icons.toll_rounded,
+    'mensajeria': Icons.send_rounded,
+    'fletes': Icons.local_shipping_rounded,
+
+    // Marketing y ventas (ampliación)
+    'redes_sociales': Icons.tag_rounded,
+    'diseno_grafico': Icons.palette_rounded,
+    'fotografia_video': Icons.camera_alt_rounded,
+    'eventos': Icons.event_rounded,
+    'material_promocional': Icons.local_offer_rounded,
+
+    // Tecnología
+    'equipo_computo': Icons.laptop_rounded,
+    'accesorios_tech': Icons.mouse_rounded,
+    'refacciones': Icons.settings_rounded,
+    'reparaciones_tech': Icons.build_circle_rounded,
+    'desarrollo_software': Icons.code_rounded,
+
+    // Administración
+    'contabilidad': Icons.calculate_rounded,
+    'asesoria_legal': Icons.balance_rounded,
+    'tramites_gubernamentales': Icons.account_balance_rounded,
+    'comisiones_bancarias': Icons.account_balance_wallet_rounded,
+    'seguros': Icons.verified_user_rounded,
+
+    // Finanzas
+    'pago_creditos': Icons.credit_card_rounded,
+    'intereses': Icons.percent_rounded,
+    'comisiones_financieras': Icons.monetization_on_rounded,
+    'diferencias_cambiarias': Icons.currency_exchange_rounded,
+
+    // Alimentación
+    'comidas': Icons.restaurant_rounded,
+    'cafe': Icons.coffee_rounded,
+    'agua_botella': Icons.local_drink_rounded,
+    'snacks': Icons.fastfood_rounded,
+
+    // Producción
+    'maquinaria': Icons.precision_manufacturing_rounded,
+    'mantenimiento_maquinaria': Icons.build_rounded,
+    'consumibles': Icons.inventory_2_rounded,
+
+    // Gastos extraordinarios
+    'multas': Icons.report_problem_rounded,
+    'donaciones': Icons.favorite_rounded,
+    'perdidas': Icons.trending_down_rounded,
+    'gastos_imprevistos': Icons.priority_high_rounded,
+    'emergencias': Icons.emergency_rounded,
+
+    // Otros
+    'caja_chica': Icons.savings_rounded,
+    'reembolsos': Icons.replay_rounded,
+    'diversos': Icons.more_horiz_rounded,
   };
 
   /// Tags en español por clave, usados para la búsqueda.
@@ -107,6 +191,76 @@ class VntlGastoIconStyle {
     'warning_gasto': ['urgente', 'imprevisto', 'emergencia'],
     'circle_gasto': ['círculo', 'punto'],
     'star_gasto': ['destacado', 'importante'],
+
+    // --- Ampliación ---
+    'insumos': ['insumos', 'cesta', 'canasta'],
+    'materia_prima': ['materia prima', 'caja', 'paquete'],
+    'inventario_almacen': ['inventario', 'almacén', 'estantes'],
+    'papeleria': ['papelería', 'hoja', 'oficina'],
+    'empaque': ['empaque', 'embalaje', 'caja abierta'],
+    'limpieza': ['limpieza', 'aseo', 'gota de agua'],
+    'herramientas': ['herramientas', 'llave inglesa'],
+    'uniformes': ['uniformes', 'playera', 'camisa', 'ropa de trabajo'],
+
+    'honorarios': ['honorarios', 'freelance', 'pago a persona'],
+    'comisiones': ['comisiones', 'porcentaje', 'venta'],
+    'prestaciones': ['prestaciones', 'beneficio', 'regalo'],
+    'capacitacion': ['capacitación', 'curso', 'entrenamiento'],
+    'viaticos': ['viáticos', 'viaje', 'maleta'],
+
+    'remodelaciones': ['remodelación', 'pintura', 'obra'],
+    'seguridad_instalaciones': ['seguridad', 'alarma', 'cámaras'],
+    'jardineria': ['jardinería', 'jardín', 'plantas'],
+
+    'hosting': ['hosting', 'dominio', 'servidor'],
+    'software_licencias': ['software', 'licencia', 'llave de acceso'],
+    'nube': ['nube', 'cloud', 'almacenamiento'],
+
+    'peajes': ['peaje', 'caseta', 'carretera'],
+    'mensajeria': ['mensajería', 'paquete', 'envío rápido'],
+    'fletes': ['flete', 'camión', 'carga'],
+
+    'redes_sociales': ['redes sociales', 'hashtag', 'instagram', 'facebook'],
+    'diseno_grafico': ['diseño gráfico', 'paleta', 'branding'],
+    'fotografia_video': ['fotografía', 'video', 'cámara'],
+    'eventos': ['eventos', 'calendario', 'expo'],
+    'material_promocional': ['material promocional', 'etiqueta', 'volante'],
+
+    'equipo_computo': ['equipo de cómputo', 'laptop', 'computadora'],
+    'accesorios_tech': ['accesorios', 'mouse', 'teclado'],
+    'refacciones': ['refacciones', 'engranaje', 'partes'],
+    'reparaciones_tech': ['reparaciones', 'herramientas cruzadas'],
+    'desarrollo_software': ['desarrollo de software', 'código', 'programación'],
+
+    'contabilidad': ['contabilidad', 'calculadora'],
+    'asesoria_legal': ['asesoría legal', 'balanza', 'abogado'],
+    'tramites_gubernamentales': ['trámites gubernamentales', 'gobierno', 'permiso'],
+    'comisiones_bancarias': ['comisiones bancarias', 'banco'],
+    'seguros': ['seguros', 'póliza', 'escudo'],
+
+    'pago_creditos': ['pago de créditos', 'tarjeta', 'crédito'],
+    'intereses': ['intereses', 'porcentaje', 'financiamiento'],
+    'comisiones_financieras': ['comisiones financieras', 'moneda'],
+    'diferencias_cambiarias': ['diferencias cambiarias', 'tipo de cambio', 'divisas'],
+
+    'comidas': ['comidas', 'cubiertos', 'alimentos'],
+    'cafe': ['café', 'taza'],
+    'agua_botella': ['agua', 'botella'],
+    'snacks': ['snacks', 'bolsa', 'botana'],
+
+    'maquinaria': ['maquinaria', 'fábrica', 'máquina'],
+    'mantenimiento_maquinaria': ['mantenimiento de maquinaria', 'llave inglesa'],
+    'consumibles': ['consumibles', 'caja pequeña'],
+
+    'multas': ['multas', 'alerta', 'infracción'],
+    'donaciones': ['donaciones', 'corazón', 'caridad'],
+    'perdidas': ['pérdidas', 'flecha hacia abajo'],
+    'gastos_imprevistos': ['gastos imprevistos', 'signo de exclamación', 'urgente'],
+    'emergencias': ['emergencias', 'luz de alerta'],
+
+    'caja_chica': ['caja chica', 'monedero'],
+    'reembolsos': ['reembolsos', 'flecha de regreso', 'devolución'],
+    'diversos': ['diversos', 'tres puntos', 'varios'],
   };
 
   /// Busca íconos cuya clave o tags coincidan parcialmente con [query].

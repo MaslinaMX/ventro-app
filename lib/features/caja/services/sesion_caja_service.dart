@@ -51,4 +51,31 @@ class SesionCajaService {
     });
     return Map<String, dynamic>.from(response.data);
   }
+
+  Future<Map<String, dynamic>> corteZ({
+    required int sesionId,
+    required String employeeNumber,
+    required String pin,
+    required double montoFinalContado,
+  }) async {
+    final response = await _dio.post('/sesiones-caja/$sesionId/corte-z', data: {
+      'employee_number': employeeNumber,
+      'pin': pin,
+      'monto_final_contado': montoFinalContado,
+    });
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  Future<List<int>> descargarCortePdf(int corteId) async {
+    final response = await _dio.get(
+      '/cortes-caja/$corteId/pdf',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data as List<int>;
+  }
+
+  Future<Map<String, dynamic>> previewCierre(int sesionId) async {
+    final response = await _dio.get('/sesiones-caja/$sesionId/preview-cierre');
+    return Map<String, dynamic>.from(response.data);
+  }
 }

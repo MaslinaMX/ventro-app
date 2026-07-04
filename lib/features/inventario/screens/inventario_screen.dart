@@ -340,8 +340,8 @@ class _InventarioScreenState extends State<InventarioScreen> {
   Widget _buildMovimientosList(dynamic colors) {
     return Consumer<InventarioController>(
       builder: (context, controller, _) {
-        final movimientosLimitados = controller.movimientos.take(3).toList();
-        final hayMas = controller.movimientos.length > 3;
+        final movimientosLimitados = controller.movimientos.take(7).toList();
+        final hayMas = controller.movimientos.length > 7;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,12 +418,12 @@ class _InventarioScreenState extends State<InventarioScreen> {
                           ),
                         ),
                         VntlTableColumn(
-                          label: 'Tipo',
+                          label: 'Cantidad',
                           flex: 2,
                           cellBuilder: (m) => VntlBadge(
                             label: m.type == MovimientoType.in_
-                                ? '${m.reason.label} +${_formatNum(m.cantidad)}'
-                                : '${m.reason.label} -${_formatNum(m.cantidad)}',
+                                ? ' +${_formatNum(m.cantidad)}'
+                                : ' -${_formatNum(m.cantidad)}',
                             variant: m.type == MovimientoType.in_
                                 ? VntlBadgeVariant.success
                                 : VntlBadgeVariant.error,
@@ -442,7 +442,7 @@ class _InventarioScreenState extends State<InventarioScreen> {
                           label: 'Motivo',
                           flex: 3,
                           cellBuilder: (m) => Text(
-                            m.notas ?? '—',
+                            m.notas != null && m.notas!.isNotEmpty ? m.notas! : m.reason.label,
                             style: VntlText.body.copyWith(color: colors.textSecondary),
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -46,7 +46,7 @@ class ProductoService {
         : (raw as List).cast<Map<String, dynamic>>();
 
     // ignore: avoid_print
-    if (list.isNotEmpty) print('🟣 primer producto: ${list.first}');
+    if (list.isNotEmpty) ;
 
     return list.map((json) => ProductoModel.fromJson(json)).toList();
   }

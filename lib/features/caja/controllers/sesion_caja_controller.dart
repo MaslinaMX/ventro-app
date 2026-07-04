@@ -1,12 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:ventro_app/features/caja/models/corte_caja_model.dart';
 import 'package:ventro_app/features/caja/models/sesion_caja_model.dart';
 import 'package:ventro_app/features/caja/services/sesion_caja_service.dart';
+import 'dart:js_interop';
+import 'package:printing/printing.dart';
+import 'package:web/web.dart' as web;
 
 enum SesionCajaStatus { idle, loading, saving, success, error }
 
 class SesionCajaController extends ChangeNotifier {
   final SesionCajaService _service = SesionCajaService();
+
+  Map<String, dynamic>? _corteZ;
+  CorteCajaModel? get corteZ => _corteZ != null ? CorteCajaModel.fromJson(_corteZ!) : null;
 
   SesionCajaStatus _status = SesionCajaStatus.idle;
   String? _errorMessage;
@@ -18,7 +25,18 @@ class SesionCajaController extends ChangeNotifier {
   bool get isLoading => _status == SesionCajaStatus.loading;
   bool get isSaving => _status == SesionCajaStatus.saving;
   SesionCajaModel? get sesionActiva => _sesionActiva;
-  Map<String, dynamic>? get corteX => _corteX;
+  CorteCajaModel? get corteX => _corteX != null ? CorteCajaModel.fromJson(_corteX!) : null;
+
+  Map<String, dynamic>? _previewCierre;
+  double? get previewEfectivoInicial =>
+      _previewCierre != null ? double.parse(_previewCierre!['monto_inicial'].toString()) : null;
+  double? get previewEfectivoEsperado =>
+      _previewCierre != null ? double.parse(_previewCierre!['efectivo_esperado'].toString()) : null;
+  double? get previewTotalVentas =>
+      _previewCierre != null ? double.parse(_previewCierre!['total_ventas'].toString()) : null;
+  int? get previewCantidadVentas => _previewCierre?['cantidad_ventas'];
+  bool _cargandoPreview = false;
+  bool get cargandoPreview => _cargandoPreview;
 
   Future<void> cargarSesionActiva(int cajaId) async {
     _status = SesionCajaStatus.loading;
@@ -124,6 +142,38 @@ class SesionCajaController extends ChangeNotifier {
     }
   }
 
+  Future<bool> generarCorteZ({
+    required String employeeNumber,
+    required String pin,
+    required double montoFinalContado,
+  }) async {
+    if (_sesionActiva == null) return false;
+    _status = SesionCajaStatus.saving;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _corteZ = await _service.corteZ(
+        sesionId: _sesionActiva!.id,
+        employeeNumber: employeeNumber,
+        pin: pin,
+        montoFinalContado: montoFinalContado,
+      );
+      _status = SesionCajaStatus.success;
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      _status = SesionCajaStatus.error;
+      _errorMessage = _parseError(e);
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = SesionCajaStatus.error;
+      _errorMessage = 'Error inesperado al generar el corte Z';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Limpia la sesión activa localmente (ej. al cambiar de caja seleccionada).
   void reset() {
     _sesionActiva = null;
@@ -145,5 +195,41 @@ class SesionCajaController extends ChangeNotifier {
       if (message != null) return message.toString();
     }
     return 'Error de conexión. Intenta de nuevo.';
+  }
+
+  Future<void> abrirCortePdf(int corteId) async {
+    try {
+      if (kIsWeb) {
+        // Abrir la ventana INMEDIATAMENTE, antes del await
+        final nuevaVentana = web.window.open('', '_blank');
+
+        final bytes = await _service.descargarCortePdf(corteId);
+
+        final blobParts = [Uint8List.fromList(bytes).toJS].toJS;
+        final blob = web.Blob(blobParts, web.BlobPropertyBag(type: 'application/pdf'));
+        final url = web.URL.createObjectURL(blob);
+
+        nuevaVentana?.location.href = url;
+      } else {
+        final bytes = await _service.descargarCortePdf(corteId);
+        await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(bytes));
+      }
+    } catch (e) {
+      _errorMessage = 'No se pudo abrir el corte';
+      notifyListeners();
+    }
+  }
+
+  Future<void> cargarPreviewCierre() async {
+    if (_sesionActiva == null) return;
+    _cargandoPreview = true;
+    notifyListeners();
+    try {
+      _previewCierre = await _service.previewCierre(_sesionActiva!.id);
+    } on DioException catch (e) {
+      _errorMessage = _parseError(e);
+    }
+    _cargandoPreview = false;
+    notifyListeners();
   }
 }

@@ -5,6 +5,7 @@ import 'package:ventro_app/features/metodos_pago/controllers/metodo_pago_control
 import 'package:ventro_app/features/metodos_pago/models/metodo_pago_model.dart';
 import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
 import 'package:ventro_app/features/ventas/models/pago_form_model.dart';
+import 'package:ventro_app/features/ventas/widgets/venta_confirmada_sheet.dart';
 
 class CobroSheet extends StatefulWidget {
   const CobroSheet({super.key});
@@ -89,7 +90,21 @@ class _CobroSheetState extends State<CobroSheet> {
 
     if (!mounted) return;
     if (venta != null) {
-      Navigator.pop(context, venta);
+      Navigator.pop(context); // cierra el modal de cobro
+      final numeroTicket = venta['numero_ticket_completo']?.toString() ?? '';
+      if (context.mounted) {
+        await VntlModal.show(
+          context,
+          title: '',
+          showClose: false,
+          width: 380,
+          content: VentaConfirmadaSheet(
+            ventaId: venta['id'],
+            numeroTicket: numeroTicket,
+            total: double.parse(venta['total'].toString()),
+          ),
+        );
+      }
     } else {
       VntlToast.show(
         context,

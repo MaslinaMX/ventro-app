@@ -287,7 +287,6 @@ class _GastosScreenState extends State<GastosScreen> {
                         VntlTableColumn(
                           label: 'Concepto',
                           flex: 3,
-                          sortValue: (g) => g.concepto,
                           cellBuilder: (g) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
@@ -306,6 +305,7 @@ class _GastosScreenState extends State<GastosScreen> {
                         VntlTableColumn(
                           label: 'Tipo',
                           flex: 2,
+                          sortValue: (g) => g.categoriaId,
                           cellBuilder: (g) {
                             final style = VntlGastoIconStyle.forCategoria(
                               context,
@@ -329,6 +329,7 @@ class _GastosScreenState extends State<GastosScreen> {
                         VntlTableColumn(
                           label: 'Método de pago',
                           flex: 2,
+                          sortValue: (g) => g.metodoPago?.nombre ?? '',
                           cellBuilder: (g) => Text(
                             g.metodoPago?.nombre ?? '—',
                             style: VntlText.body.copyWith(color: colors.textSecondary),

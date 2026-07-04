@@ -56,8 +56,15 @@ Future<ResultadoEditorVariante> abrirEditorVariante(
 
   if (!context.mounted) return const ResultadoEditorVariante.cancelada();
 
+  final settingsCtrl = context.read<SettingsController>();
+
+  if (settingsCtrl.sucursales.isEmpty) {
+    await settingsCtrl.loadSucursales();
+  }
+  if (!context.mounted) return const ResultadoEditorVariante.cancelada();
+
   final colors = context.colors;
-  final sucursales = context.read<SettingsController>().sucursales;
+  final sucursales = settingsCtrl.sucursales;
 
   final nombreCtrl = TextEditingController(text: variante?.nombre ?? '');
   final precioCtrl = TextEditingController(

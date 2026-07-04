@@ -25,6 +25,8 @@ class MetodoPagoModel {
       activo: json['activo'] ?? true,
       isDeletable: json['is_deletable'] ?? true,
       requiereReferencia: json['requiere_referencia'] ?? false,
+      icono: json['icono'],
+      color: json['color'],
     );
   }
 }

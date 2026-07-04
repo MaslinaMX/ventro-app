@@ -22,6 +22,7 @@ export 'components/vntl_tooltip.dart';
 export 'components/vntl_product_card.dart';
 export 'components/vntl_table.dart';
 export 'components/vntl_switch.dart';
+export 'components/vntl_action_list.dart';
 
 export 'helpers/vntl_category_style.dart';
 export 'helpers/vntl_gasto_icon_style.dart';
