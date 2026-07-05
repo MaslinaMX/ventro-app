@@ -136,6 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             prefixIcon: Icons.link_rounded,
                             textInputAction: TextInputAction.next,
                             onChanged: (_) => _slugEdited = true,
+                            readOnly: true, // Evitar que el usuario edite directamente el slug
                             suffix: Text(
                               '.ventro.com.mx',
                               style: VntlText.caption.copyWith(color: colors.textTertiary),
