@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/core/config/env.dart';
@@ -41,6 +43,19 @@ void main() {
       (_) => false,
     );
   };
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('🔴 FlutterError: ${details.exceptionAsString()}');
+    debugPrint('🔴 Stack: ${details.stack}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('🔴 PlatformDispatcher error: $error');
+    debugPrint('🔴 Stack: $stack');
+    return true;
+  };
+
   runApp(const VentroApp());
 }
 

@@ -4,6 +4,7 @@ import 'package:printing/printing.dart';
 import 'package:ventro_app/features/ventas/models/tipo_descuento.dart';
 import 'package:ventro_app/features/ventas/models/venta_detalle_model.dart';
 import 'package:web/web.dart' as web;
+import 'package:flutter/scheduler.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
@@ -179,6 +180,7 @@ class VentaController extends ChangeNotifier {
       _status = VentaStatus.error;
       _errorMessage = 'Error inesperado al cargar productos';
     }
+    debugPrint('🟣 cargarDatos notifyListeners final, status=$_status');
     notifyListeners();
   }
 
@@ -228,6 +230,7 @@ class VentaController extends ChangeNotifier {
       _carrito
           .add(CarritoItemModel(variante: variante, productoPadre: producto, cantidad: cantidad));
     }
+    debugPrint('🟠 agregarAlCarrito notifyListeners llamado, carrito.length=${_carrito.length}');
     notifyListeners();
   }
 
@@ -376,6 +379,7 @@ class VentaController extends ChangeNotifier {
       _verificandoEmpleado = false;
       _reiniciarTimerInactividad();
       notifyListeners();
+      SchedulerBinding.instance.scheduleFrame();
       return true;
     } on DioException catch (e) {
       _verificandoEmpleado = false;
@@ -527,6 +531,25 @@ class VentaController extends ChangeNotifier {
       _errorMessage = _parseError(e);
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> imprimirTicketCancelacion(int ventaId) async {
+    try {
+      if (kIsWeb) {
+        final nuevaVentana = web.window.open('', '_blank');
+        final bytes = await _ventaService.descargarTicketCancelacionPdf(ventaId);
+        final blobParts = [Uint8List.fromList(bytes).toJS].toJS;
+        final blob = web.Blob(blobParts, web.BlobPropertyBag(type: 'application/pdf'));
+        final url = web.URL.createObjectURL(blob);
+        nuevaVentana?.location.href = url;
+      } else {
+        final bytes = await _ventaService.descargarTicketCancelacionPdf(ventaId);
+        await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(bytes));
+      }
+    } catch (e) {
+      _errorMessage = 'No se pudo abrir el comprobante de cancelación';
+      notifyListeners();
     }
   }
 }

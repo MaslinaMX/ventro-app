@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
+import 'package:ventro_app/design_system/widgets/vntl_mes_search_list.dart';
+import 'package:ventro_app/design_system/widgets/vntl_sucursal_search_list.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
 import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/settings/models/sucursal_model.dart';
@@ -24,13 +26,13 @@ class _TodasVentasScreenState extends State<TodasVentasScreen> {
   List<SucursalModel> _sucursales = [];
   int? _sucursalSeleccionadaId;
 
-  late final List<_MesOption> _meses;
+  late final List<VntlMesOption> _meses;
   String? _mesSeleccionado;
 
   @override
   void initState() {
     super.initState();
-    _meses = _generarUltimosMeses();
+    _meses = generarUltimosMeses();
     WidgetsBinding.instance.addPostFrameCallback((_) => _inicializar());
   }
 
@@ -38,29 +40,6 @@ class _TodasVentasScreenState extends State<TodasVentasScreen> {
   void dispose() {
     _buscarCtrl.dispose();
     super.dispose();
-  }
-
-  List<_MesOption> _generarUltimosMeses() {
-    const nombres = [
-      'Enero',
-      'Febrero',
-      'Marzo',
-      'Abril',
-      'Mayo',
-      'Junio',
-      'Julio',
-      'Agosto',
-      'Septiembre',
-      'Octubre',
-      'Noviembre',
-      'Diciembre',
-    ];
-    final ahora = DateTime.now();
-    return List.generate(12, (i) {
-      final fecha = DateTime(ahora.year, ahora.month - i, 1);
-      final valor = '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}';
-      return _MesOption(value: valor, label: '${nombres[fecha.month - 1]} ${fecha.year}');
-    });
   }
 
   Future<void> _inicializar() async {
@@ -88,7 +67,7 @@ class _TodasVentasScreenState extends State<TodasVentasScreen> {
           padding: const EdgeInsets.only(top: 80),
           child: VntlModal(
             title: 'Seleccionar sucursal',
-            content: _SucursalSearchListConTodas(sucursales: _sucursales),
+            content: VntlSucursalSearchList(sucursales: _sucursales),
           ),
         ),
       ),
@@ -112,7 +91,7 @@ class _TodasVentasScreenState extends State<TodasVentasScreen> {
           padding: const EdgeInsets.only(top: 80),
           child: VntlModal(
             title: 'Seleccionar mes',
-            content: _MesSearchListConTodos(meses: _meses),
+            content: VntlMesSearchList(meses: _meses),
           ),
         ),
       ),
@@ -416,131 +395,6 @@ class _StatCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _MesOption {
-  final String value; // 'YYYY-MM'
-  final String label; // ej. 'Julio 2026'
-
-  const _MesOption({required this.value, required this.label});
-}
-
-class _MesSearchListConTodos extends StatelessWidget {
-  const _MesSearchListConTodos({required this.meses});
-
-  final List<_MesOption> meses;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          leading: Icon(Icons.all_inclusive_rounded, color: colors.textSecondary),
-          title: Text('Todas las fechas', style: VntlText.body),
-          onTap: () => Navigator.pop(context, 'TODOS'),
-        ),
-        Divider(color: colors.border, height: 0.5),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 320),
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: meses.length,
-            itemBuilder: (_, i) {
-              final m = meses[i];
-              return ListTile(
-                title: Text(m.label, style: VntlText.body),
-                onTap: () => Navigator.pop(context, m.value),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SucursalSearchListConTodas extends StatefulWidget {
-  const _SucursalSearchListConTodas({required this.sucursales});
-
-  final List<SucursalModel> sucursales;
-
-  @override
-  State<_SucursalSearchListConTodas> createState() => _SucursalSearchListConTodasState();
-}
-
-class _SucursalSearchListConTodasState extends State<_SucursalSearchListConTodas> {
-  final _searchController = TextEditingController();
-  late List<SucursalModel> _filtradas;
-
-  @override
-  void initState() {
-    super.initState();
-    _filtradas = widget.sucursales;
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _filtrar(String query) {
-    setState(() {
-      _filtradas = widget.sucursales
-          .where((s) => s.nombre.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        VntlInput(
-          hint: 'Buscar sucursal...',
-          autofocus: true,
-          controller: _searchController,
-          prefixIcon: Icons.search,
-          onChanged: _filtrar,
-        ),
-        const SizedBox(height: VntlSpacing.md),
-        ListTile(
-          leading: Icon(Icons.apps_rounded, color: colors.textSecondary),
-          title: Text('Todas las sucursales', style: VntlText.body),
-          onTap: () => Navigator.pop(context, -1),
-        ),
-        Divider(color: colors.border, height: 0.5),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 280),
-          child: _filtradas.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.all(VntlSpacing.lg),
-                  child: Text('Sin resultados',
-                      style: VntlText.body.copyWith(color: colors.textTertiary)),
-                )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _filtradas.length,
-                  itemBuilder: (_, i) {
-                    final item = _filtradas[i];
-                    return ListTile(
-                      title: Text(item.nombre, style: VntlText.body),
-                      onTap: () => Navigator.pop(context, item.id),
-                    );
-                  },
-                ),
-        ),
-      ],
     );
   }
 }

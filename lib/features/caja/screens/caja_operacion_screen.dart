@@ -379,6 +379,71 @@ class _SesionActivaView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final canceladas = ventas.where((v) => v.estado == 'cancelada').toList();
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 728;
+
+    final tituloYEstado = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(caja.nombre, style: VntlText.h3),
+        const SizedBox(height: VntlSpacing.xs),
+        Row(
+          children: [
+            Icon(Icons.circle, size: 8, color: colors.success),
+            const SizedBox(width: VntlSpacing.xs),
+            Text(
+              'Sesión abierta · ${sesion.usuarioNombre ?? '—'}',
+              style: VntlText.caption.copyWith(color: colors.textSecondary),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final botonesAccion = Wrap(
+      spacing: VntlSpacing.sm,
+      runSpacing: VntlSpacing.sm,
+      children: [
+        VntlButton(
+          label: 'Cambiar caja',
+          icon: Icons.swap_horiz_rounded,
+          variant: VntlButtonVariant.ghost,
+          size: VntlButtonSize.sm,
+          onPressed: onCambiarCaja,
+        ),
+        VntlButton(
+          label: 'Generar Corte X',
+          icon: Icons.receipt_long_rounded,
+          variant: VntlButtonVariant.secondary,
+          size: VntlButtonSize.sm,
+          onPressed: onVerCorteX,
+        ),
+        VntlButton(
+          label: 'Cerrar Caja',
+          icon: Icons.lock_rounded,
+          variant: VntlButtonVariant.danger,
+          size: VntlButtonSize.sm,
+          onPressed: onCerrar,
+        ),
+      ],
+    );
+
+    final header = isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              tituloYEstado,
+              const SizedBox(height: VntlSpacing.md),
+              botonesAccion,
+            ],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: tituloYEstado),
+              botonesAccion,
+            ],
+          );
 
     return Align(
       alignment: Alignment.topLeft,
@@ -387,56 +452,7 @@ class _SesionActivaView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(caja.nombre, style: VntlText.h3),
-                      const SizedBox(height: VntlSpacing.xs),
-                      Row(
-                        children: [
-                          Icon(Icons.circle, size: 8, color: colors.success),
-                          const SizedBox(width: VntlSpacing.xs),
-                          Text(
-                            'Sesión abierta · ${sesion.usuarioNombre ?? '—'}',
-                            style: VntlText.caption.copyWith(color: colors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Wrap(
-                  spacing: VntlSpacing.sm,
-                  children: [
-                    VntlButton(
-                      label: 'Cambiar caja',
-                      icon: Icons.swap_horiz_rounded,
-                      variant: VntlButtonVariant.ghost,
-                      size: VntlButtonSize.sm,
-                      onPressed: onCambiarCaja,
-                    ),
-                    VntlButton(
-                      label: 'Generar Corte X',
-                      icon: Icons.receipt_long_rounded,
-                      variant: VntlButtonVariant.secondary,
-                      size: VntlButtonSize.sm,
-                      onPressed: onVerCorteX,
-                    ),
-                    VntlButton(
-                      label: 'Cerrar Caja',
-                      icon: Icons.lock_rounded,
-                      variant: VntlButtonVariant.danger,
-                      size: VntlButtonSize.sm,
-                      onPressed: onCerrar,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            header,
             const SizedBox(height: VntlSpacing.xl),
             Container(
               padding: const EdgeInsets.all(VntlSpacing.lg),

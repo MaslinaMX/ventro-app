@@ -32,7 +32,7 @@ class ChangePinDialogState extends State<ChangePinDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    print('>>> loading: true');
+    debugPrint('>>> loading: true');
     setState(() {
       _loading = true;
       _error = null;

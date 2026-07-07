@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
@@ -20,7 +21,6 @@ class VentaScreen extends StatefulWidget {
 
 class _VentaScreenState extends State<VentaScreen> {
   bool _loaded = false;
-  bool _catalogoCargado = false;
   final _busquedaCtrl = TextEditingController();
   static const double _collapseBreakpoint = 900.0;
 
@@ -31,7 +31,11 @@ class _VentaScreenState extends State<VentaScreen> {
       _loaded = true;
       final sucursalId = context.read<AuthController>().user?.sucursalId;
       if (sucursalId != null) {
-        context.read<VentaController>().cargarDatos(sucursalId: sucursalId);
+        context.read<VentaController>().cargarDatos(sucursalId: sucursalId).then((_) {
+          if (mounted) {
+            SchedulerBinding.instance.ensureVisualUpdate();
+          }
+        });
       }
     }
   }
@@ -40,15 +44,6 @@ class _VentaScreenState extends State<VentaScreen> {
   void dispose() {
     _busquedaCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _cargarCatalogoSiHaceFalta(BuildContext context) async {
-    if (_catalogoCargado) return;
-    _catalogoCargado = true;
-    final sucursalId = context.read<AuthController>().user?.sucursalId;
-    if (sucursalId != null) {
-      await context.read<VentaController>().cargarDatos(sucursalId: sucursalId);
-    }
   }
 
   Future<void> _onTapProducto(BuildContext context, dynamic item) async {
@@ -100,9 +95,6 @@ class _VentaScreenState extends State<VentaScreen> {
     if (!ctrl.empleadoVerificado) {
       return const VerificarEmpleadoVenta();
     }
-
-    // ─── Paso 3: catálogo + carrito ───────────────────────────────────────────
-    _cargarCatalogoSiHaceFalta(context);
 
     if (ctrl.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -167,37 +159,40 @@ class _VentaScreenState extends State<VentaScreen> {
         ),
         const SizedBox(height: VntlSpacing.md),
         Expanded(
-          child: ctrl.variantesVisibles.isEmpty
-              ? Center(
-                  child: Text(
-                    'Sin productos para mostrar',
-                    style: VntlText.body.copyWith(color: colors.textTertiary),
-                  ),
-                )
-              : GridView.builder(
-                  padding: EdgeInsets.fromLTRB(
-                    VntlSpacing.lg,
-                    0,
-                    VntlSpacing.lg,
-                    isMobile ? 96 : VntlSpacing.lg, // espacio para el FAB
-                  ),
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: isMobile ? 140 : 160,
-                    mainAxisSpacing: VntlSpacing.md,
-                    crossAxisSpacing: VntlSpacing.md,
-                    childAspectRatio: 0.8,
-                  ),
-                  itemCount: ctrl.variantesVisibles.length,
-                  itemBuilder: (context, index) {
-                    final item = ctrl.variantesVisibles[index];
-                    return ProductoGridCard(
-                      variante: item.variante,
-                      producto: item.producto,
-                      onTap: () => _onTapProducto(context, item),
-                    );
-                  },
-                ),
-        ),
+            child: ctrl.variantesVisibles.isEmpty
+                ? Center(
+                    child: Text(
+                      'Sin productos para mostrar',
+                      style: VntlText.body.copyWith(color: colors.textTertiary),
+                    ),
+                  )
+                : RepaintBoundary(
+                    key: ValueKey(
+                        'grid-${ctrl.variantesVisibles.length}-${ctrl.busqueda}-${ctrl.categoriaSeleccionadaId}'),
+                    child: GridView.builder(
+                      padding: EdgeInsets.fromLTRB(
+                        VntlSpacing.lg,
+                        0,
+                        VntlSpacing.lg,
+                        isMobile ? 96 : VntlSpacing.lg, // espacio para el FAB
+                      ),
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: isMobile ? 140 : 160,
+                        mainAxisSpacing: VntlSpacing.md,
+                        crossAxisSpacing: VntlSpacing.md,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemCount: ctrl.variantesVisibles.length,
+                      itemBuilder: (context, index) {
+                        final item = ctrl.variantesVisibles[index];
+                        return ProductoGridCard(
+                          variante: item.variante,
+                          producto: item.producto,
+                          onTap: () => _onTapProducto(context, item),
+                        );
+                      },
+                    ),
+                  )),
       ],
     );
 
@@ -220,6 +215,7 @@ class _VentaScreenState extends State<VentaScreen> {
             ],
           );
 
+    debugPrint('🔵 VentaScreen build ejecutado: ${DateTime.now()}');
     return Listener(
       onPointerDown: (_) => ctrl.registrarActividad(),
       child: pantalla,

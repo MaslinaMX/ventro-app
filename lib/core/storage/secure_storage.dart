@@ -4,6 +4,7 @@ class SecureStorage {
   static const _keyToken = 'ventro_token';
   static const _keyTenantId = 'ventro_tenant_id';
   static const _keyOnboarding = 'ventro_onboarding_complete';
+  static const _keySucursalId = 'ventro_sucursal_id';
 
   static Future<void> saveSession({
     required String token,
@@ -26,6 +27,17 @@ class SecureStorage {
     return prefs.getString(_keyTenantId);
   }
 
+  static Future<void> setSucursalId(int sucursalId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keySucursalId, sucursalId.toString());
+  }
+
+  static Future<int?> getSucursalId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(_keySucursalId);
+    return value != null ? int.tryParse(value) : null;
+  }
+
   static Future<bool> isOnboardingComplete() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyOnboarding) ?? false;
@@ -41,5 +53,6 @@ class SecureStorage {
     await prefs.remove(_keyToken);
     await prefs.remove(_keyTenantId);
     await prefs.remove(_keyOnboarding);
+    await prefs.remove(_keySucursalId);
   }
 }

@@ -107,6 +107,18 @@ class _CajaVentasSesionCard extends StatelessWidget {
                   ),
                 ),
                 VntlTableColumn(
+                  label: 'Estatus',
+                  flex: 2,
+                  sortValue: (v) => v.estado,
+                  cellBuilder: (v) => Text(
+                    v.estado.toUpperCase(),
+                    style: VntlText.body.copyWith(
+                      color: v.estado == 'cancelada' ? colors.error : colors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                VntlTableColumn(
                   label: 'Hora',
                   flex: 1,
                   sortValue: (v) => v.hora,

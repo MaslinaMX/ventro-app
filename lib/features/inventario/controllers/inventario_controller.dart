@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ventro_app/features/inventario/models/inventario_stock_model.dart';
 import 'package:ventro_app/features/inventario/models/movimiento_inventario_model.dart';
 import 'package:ventro_app/features/inventario/services/inventario_service.dart';
@@ -13,9 +13,9 @@ class InventarioController extends ChangeNotifier {
   String? _error;
   String? _movimientosError;
   int? _sucursalId;
+  String? _busquedaMovimientos;
+  String? _mesMovimientos;
 
-  /// Umbral configurable para "stock bajo". Default: 5.
-  /// este valor debe cargarse desde la configuración del tenant.
   int umbralStockBajo = 5;
 
   List<InventarioStockModel> get stock => _stock;
@@ -25,6 +25,8 @@ class InventarioController extends ChangeNotifier {
   String? get error => _error;
   String? get movimientosError => _movimientosError;
   int? get sucursalId => _sucursalId;
+  String? get busquedaMovimientos => _busquedaMovimientos;
+  String? get mesMovimientos => _mesMovimientos;
 
   bool isLoadingUmbral = false;
 
@@ -63,12 +65,30 @@ class InventarioController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _movimientos = await _service.getMovimientosPorSucursal(sucursalId);
+      _movimientos = await _service.getMovimientosPorSucursal(
+        sucursalId,
+        search: _busquedaMovimientos,
+        mes: _mesMovimientos,
+      );
     } catch (e) {
       _movimientosError = 'No se pudo cargar el historial de movimientos.';
     } finally {
       _isLoadingMovimientos = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> buscarMovimientos(String query) async {
+    _busquedaMovimientos = query.isEmpty ? null : query;
+    if (_sucursalId != null) {
+      await cargarMovimientos(_sucursalId!);
+    }
+  }
+
+  Future<void> filtrarMovimientosPorMes(String? mes) async {
+    _mesMovimientos = mes;
+    if (_sucursalId != null) {
+      await cargarMovimientos(_sucursalId!);
     }
   }
 
@@ -111,7 +131,6 @@ class InventarioController extends ChangeNotifier {
     try {
       umbralStockBajo = await _service.obtenerStockMinimoGlobal();
     } catch (_) {
-      // Si falla, se queda con el default de 5.
     } finally {
       isLoadingUmbral = false;
       notifyListeners();
@@ -135,8 +154,6 @@ class InventarioController extends ChangeNotifier {
     return _service.getMovimientosPorVariante(varianteId, sucursalId: sucursalId);
   }
 
-  /// Trae movimientos con filtros opcionales. Si ambos son null, trae
-  /// todos los movimientos del tenant (sin filtrar por producto ni sucursal).
   Future<List<MovimientoInventarioModel>> obtenerMovimientos({
     int? varianteId,
     int? sucursalId,

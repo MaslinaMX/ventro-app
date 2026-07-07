@@ -29,8 +29,12 @@ class ApiClient {
       onRequest: (options, handler) async {
         final token = await SecureStorage.getToken();
         final tenantId = await SecureStorage.getTenantId();
+        final sucursalId = await SecureStorage.getSucursalId();
+
         if (token != null) options.headers['Authorization'] = 'Bearer $token';
         if (tenantId != null) options.headers['X-Tenant-ID'] = tenantId;
+        if (sucursalId != null) options.headers['X-Sucursal-ID'] = sucursalId.toString();
+
         return handler.next(options);
       },
       onError: (error, handler) {

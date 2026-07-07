@@ -26,10 +26,16 @@ class InventarioService {
   Future<List<MovimientoInventarioModel>> getMovimientosPorSucursal(
     int sucursalId, {
     int page = 1,
+    String? search,
+    String? mes,
   }) async {
     final response = await _dio.get(
       '/inventario/sucursales/$sucursalId/movimientos',
-      queryParameters: {'page': page},
+      queryParameters: {
+        'page': page,
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (mes != null) 'mes': mes,
+      },
     );
     final List data = response.data['data'] as List;
     return data

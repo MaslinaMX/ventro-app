@@ -1,5 +1,6 @@
 // ✅ V2
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ventro_app/core/network/api_client.dart';
 import 'package:ventro_app/features/auth/models/user_model.dart';
 
@@ -27,7 +28,7 @@ class UserService {
       );
       return UserModel.fromJson(res.data);
     } on DioException catch (e) {
-      print('ERROR: ${e.response?.data}');
+      debugPrint('ERROR: ${e.response?.data}');
       rethrow;
     }
   }

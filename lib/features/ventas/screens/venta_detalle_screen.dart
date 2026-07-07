@@ -79,34 +79,51 @@ class _VentaDetalleScreenState extends State<VentaDetalleScreen> {
         backgroundColor: colors.background,
         title: Text('Ticket ${venta.numeroTicketCompleto}', style: VntlText.h4),
         actions: [
-          Tooltip(
-            message: esAdmin ? 'Cancelar venta' : 'Solo un administrador puede cancelar',
-            child: Padding(
-              padding: const EdgeInsets.only(right: VntlSpacing.sm),
-              child: VntlButton(
-                label: 'Cancelar venta',
-                icon: Icons.cancel_rounded,
-                size: VntlButtonSize.sm,
-                variant: VntlButtonVariant.danger,
-                onPressed: esAdmin ? () => _confirmarCancelacion(context) : null,
+          if (venta.estado == 'cancelada')
+            Tooltip(
+              message: 'Ver comprobante de cancelación',
+              child: Padding(
+                padding: const EdgeInsets.only(right: VntlSpacing.sm),
+                child: VntlButton(
+                  label: 'Comprobante de cancelación',
+                  icon: Icons.receipt_long_rounded,
+                  size: VntlButtonSize.sm,
+                  variant: VntlButtonVariant.danger,
+                  onPressed: () =>
+                      context.read<VentaController>().imprimirTicketCancelacion(venta.id),
+                ),
+              ),
+            )
+          else ...[
+            Tooltip(
+              message: esAdmin ? 'Cancelar venta' : 'Solo un administrador puede cancelar',
+              child: Padding(
+                padding: const EdgeInsets.only(right: VntlSpacing.sm),
+                child: VntlButton(
+                  label: 'Cancelar venta',
+                  icon: Icons.cancel_rounded,
+                  size: VntlButtonSize.sm,
+                  variant: VntlButtonVariant.danger,
+                  onPressed: esAdmin ? () => _confirmarCancelacion(context) : null,
+                ),
               ),
             ),
-          ),
-          Tooltip(
-            message: esAdmin ? 'Reimprimir ticket' : 'Solo un administrador puede reimprimir',
-            child: Padding(
-              padding: const EdgeInsets.only(right: VntlSpacing.sm),
-              child: VntlButton(
-                label: 'Reimprimir',
-                icon: Icons.print_rounded,
-                size: VntlButtonSize.sm,
-                variant: VntlButtonVariant.secondary,
-                onPressed: esAdmin
-                    ? () => context.read<VentaController>().reimprimirTicket(venta.id)
-                    : null,
+            Tooltip(
+              message: esAdmin ? 'Reimprimir ticket' : 'Solo un administrador puede reimprimir',
+              child: Padding(
+                padding: const EdgeInsets.only(right: VntlSpacing.sm),
+                child: VntlButton(
+                  label: 'Reimprimir',
+                  icon: Icons.print_rounded,
+                  size: VntlButtonSize.sm,
+                  variant: VntlButtonVariant.secondary,
+                  onPressed: esAdmin
+                      ? () => context.read<VentaController>().reimprimirTicket(venta.id)
+                      : null,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
       body: SingleChildScrollView(

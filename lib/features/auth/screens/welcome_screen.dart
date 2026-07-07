@@ -18,8 +18,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      print('URI BASE: ${Uri.base}');
-      print('FRAGMENT: ${Uri.base.fragment}');
+      debugPrint('URI BASE: ${Uri.base}');
+      debugPrint('FRAGMENT: ${Uri.base.fragment}');
 
       if (Uri.base.fragment.startsWith('/activar')) return;
 

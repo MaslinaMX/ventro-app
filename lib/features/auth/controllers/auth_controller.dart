@@ -31,6 +31,9 @@ class AuthController extends ChangeNotifier {
       final user = await _service.getMe();
       _user = user;
       _tenantId = await SecureStorage.getTenantId();
+      if (user.sucursalId != null) {
+        await SecureStorage.setSucursalId(user.sucursalId!);
+      }
       notifyListeners();
     } catch (_) {
       await SecureStorage.clear();
@@ -61,6 +64,10 @@ class AuthController extends ChangeNotifier {
         onboardingComplete: false,
       );
 
+      if (response.user.sucursalId != null) {
+        await SecureStorage.setSucursalId(response.user.sucursalId!);
+      }
+
       _user = response.user;
       _tenantId = response.tenantId;
       _setSuccess();
@@ -90,6 +97,10 @@ class AuthController extends ChangeNotifier {
       );
 
       await SecureStorage.setOnboardingComplete();
+      if (user.sucursalId != null) {
+        await SecureStorage.setSucursalId(user.sucursalId!);
+      }
+
       _user = user;
       _setSuccess();
       return true;
@@ -131,6 +142,10 @@ class AuthController extends ChangeNotifier {
         tenantId: response.tenantId,
         onboardingComplete: true,
       );
+
+      if (response.user.sucursalId != null) {
+        await SecureStorage.setSucursalId(response.user.sucursalId!);
+      }
 
       _user = response.user;
       _tenantId = response.tenantId;
@@ -181,7 +196,6 @@ class AuthController extends ChangeNotifier {
   String _parseError(DioException e) {
     final data = e.response?.data;
     if (data is Map) {
-      // Errores de validación Laravel
       final errors = data['errors'];
       if (errors is Map) {
         final first = (errors.values.first as List).first;
@@ -201,6 +215,9 @@ class AuthController extends ChangeNotifier {
       final user = await _service.getMe();
       _user = user;
       _tenantId = await SecureStorage.getTenantId();
+      if (user.sucursalId != null) {
+        await SecureStorage.setSucursalId(user.sucursalId!);
+      }
       notifyListeners();
     } catch (_) {
       await SecureStorage.clear();

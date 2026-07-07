@@ -112,4 +112,12 @@ class VentaService {
     });
     return Map<String, dynamic>.from(response.data);
   }
+
+  Future<List<int>> descargarTicketCancelacionPdf(int ventaId) async {
+    final response = await _dio.get(
+      '/ventas/$ventaId/ticket-cancelacion',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data as List<int>;
+  }
 }
