@@ -11,6 +11,7 @@ import 'package:ventro_app/features/auth/screens/activate_screen.dart';
 import 'package:ventro_app/features/auth/screens/blocked_screen.dart';
 import 'package:ventro_app/features/caja/controllers/caja_controller.dart';
 import 'package:ventro_app/features/caja/controllers/sesion_caja_controller.dart';
+import 'package:ventro_app/features/catalogo_publico/screens/catalogo_publico_screen.dart';
 import 'package:ventro_app/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:ventro_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:ventro_app/features/gastos/controllers/categoria_gasto_controller.dart';
@@ -30,10 +31,12 @@ import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/onboarding_screen.dart';
 import 'features/auth/screens/lookup_screen.dart';
 import 'features/auth/screens/login_screen.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
+  usePathUrlStrategy();
   debugPrint('baseUrl: ${Env.baseUrl}');
   ApiClient.onTenantBlocked = (reason, message) {
     navigatorKey.currentState?.pushAndRemoveUntil(
@@ -86,7 +89,10 @@ class VentroApp extends StatelessWidget {
         navigatorKey: navigatorKey,
         title: 'Ventro POS',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(fontFamily: 'Inter', brightness: Brightness.light),
+        theme: ThemeData(
+          fontFamily: 'Inter',
+          brightness: Brightness.light,
+        ),
         darkTheme: ThemeData(fontFamily: 'Inter', brightness: Brightness.dark),
         themeMode: ThemeMode.system,
         initialRoute: '/',
@@ -97,6 +103,7 @@ class VentroApp extends StatelessWidget {
 
           Widget screen = switch (path) {
             '/' => const WelcomeScreen(),
+            '/catalogo' => const CatalogoPublicoScreen(),
             '/dashboard' => const DashboardScreen(),
             '/register' => const RegisterScreen(),
             '/onboarding' => const OnboardingScreen(),
