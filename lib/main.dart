@@ -12,6 +12,7 @@ import 'package:ventro_app/features/auth/screens/blocked_screen.dart';
 import 'package:ventro_app/features/caja/controllers/caja_controller.dart';
 import 'package:ventro_app/features/caja/controllers/sesion_caja_controller.dart';
 import 'package:ventro_app/features/catalogo_publico/screens/catalogo_publico_screen.dart';
+import 'package:ventro_app/features/clientes/controllers/clientes_controller.dart';
 import 'package:ventro_app/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:ventro_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:ventro_app/features/gastos/controllers/categoria_gasto_controller.dart';
@@ -83,6 +84,7 @@ class VentroApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ConfiguracionTicketController()),
         ChangeNotifierProvider(create: (_) => DashboardController()),
         ChangeNotifierProvider(create: (_) => TodasVentasController()),
+        ChangeNotifierProvider(create: (_) => ClientesController()),
       ],
       child: // En main.dart — reemplaza el routes por onGenerateRoute
           MaterialApp(

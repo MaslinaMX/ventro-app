@@ -49,11 +49,15 @@ class _SelectorCajaVentaState extends State<SelectorCajaVenta> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: VntlSpacing.xl),
-            VntlButton(
-              label: 'Abrir Caja',
-              icon: Icons.point_of_sale_rounded,
-              variant: VntlButtonVariant.ghost,
-              onPressed: widget.onIrACaja,
+            Center(
+              child: IntrinsicWidth(
+                child: VntlButton(
+                  label: 'Abrir Caja',
+                  variant: VntlButtonVariant.ghost,
+                  icon: Icons.lock_open_rounded,
+                  onPressed: widget.onIrACaja,
+                ),
+              ),
             ),
           ],
         ),

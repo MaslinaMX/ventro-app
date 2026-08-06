@@ -478,11 +478,15 @@ class _AccountScreenState extends State<AccountScreen> {
                       style: VntlText.body.copyWith(color: colors.textSecondary),
                     ),
                     const SizedBox(height: VntlSpacing.xl),
-                    VntlButton(
-                      label: 'Cancelar suscripción',
-                      variant: VntlButtonVariant.danger,
-                      onPressed: _confirmCancel,
-                      fullWidth: false,
+                    Center(
+                      child: IntrinsicWidth(
+                        child: VntlButton(
+                          label: 'Cancelar suscripción',
+                          variant: VntlButtonVariant.danger,
+                          onPressed: _confirmCancel,
+                          fullWidth: false,
+                        ),
+                      ),
                     ),
                   ],
                 ],

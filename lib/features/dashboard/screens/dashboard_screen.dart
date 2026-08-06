@@ -4,6 +4,7 @@ import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/controllers/auth_controller.dart';
 import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/caja/screens/caja_operacion_screen.dart';
+import 'package:ventro_app/features/clientes/screens/clientes_screen.dart';
 import 'package:ventro_app/features/dashboard/screens/principal_screen.dart';
 import 'package:ventro_app/features/gastos/screens/gastos_screen.dart';
 import 'package:ventro_app/features/inventario/screens/inventario_screen.dart';
@@ -178,10 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
       case '/clientes':
-        return _Placeholder(
-          label: 'Clientes',
-          icon: Icons.people_rounded,
-        );
+        return const ClientesScreen();
 
       case '/inventario':
         return InventarioScreen(
