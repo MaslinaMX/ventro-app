@@ -97,7 +97,7 @@ class VentroApp extends StatelessWidget {
         ),
         darkTheme: ThemeData(fontFamily: 'Inter', brightness: Brightness.dark),
         themeMode: ThemeMode.system,
-        initialRoute: '/',
+        // initialRoute: '/',
         onGenerateRoute: (settings) {
           final uri = Uri.parse(settings.name ?? '/');
           final path = uri.path;

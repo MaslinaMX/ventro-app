@@ -1,6 +1,7 @@
 // ✅ V2
 
 import 'package:flutter/material.dart';
+import 'package:ventro_app/core/storage/secure_storage.dart';
 import 'package:ventro_app/design_system/vntl.dart';
 import 'package:ventro_app/features/auth/services/activation_service.dart';
 
@@ -41,6 +42,10 @@ class _ActivateScreenState extends State<ActivateScreen> {
   }
 
   Future<void> _init() async {
+    // Limpia cualquier sesión activa para evitar que algo redirija
+    // al dashboard mientras se valida el token de activación.
+    await SecureStorage.clear();
+
     _token = widget.token;
 
     if (_token == null || _token!.isEmpty || widget.tenantId == null) {
@@ -55,7 +60,7 @@ class _ActivateScreenState extends State<ActivateScreen> {
       final result = await ActivationService().validateToken(_token!, widget.tenantId!);
       setState(() {
         _userName = result['name'];
-        _userEmail = result['email']; // ← guardar email
+        _userEmail = result['email'];
         _loading = false;
       });
     } catch (_) {
