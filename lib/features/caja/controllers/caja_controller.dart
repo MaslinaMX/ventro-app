@@ -28,6 +28,9 @@ class CajaController extends ChangeNotifier {
     } on DioException catch (e) {
       _status = CajaStatus.error;
       _errorMessage = _parseError(e);
+    } catch (e) {
+      _status = CajaStatus.error;
+      _errorMessage = 'Error al cargar cajas: $e';
     }
     notifyListeners();
   }

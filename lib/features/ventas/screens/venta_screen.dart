@@ -9,6 +9,7 @@ import 'package:ventro_app/features/ventas/widgets/carrito_panel.dart';
 import 'package:ventro_app/features/products/models/categoria_model.dart';
 import 'package:ventro_app/features/ventas/widgets/producto_grid_card.dart';
 import 'package:ventro_app/features/ventas/widgets/selector_caja_venta.dart';
+import 'package:ventro_app/features/ventas/widgets/selector_sucursal_venta.dart';
 import 'package:ventro_app/features/ventas/widgets/verificar_empleado_venta.dart';
 
 class VentaScreen extends StatefulWidget {
@@ -20,30 +21,51 @@ class VentaScreen extends StatefulWidget {
 }
 
 class _VentaScreenState extends State<VentaScreen> {
-  bool _loaded = false;
+  int? _sucursalIdCargada;
   final _busquedaCtrl = TextEditingController();
   static const double _collapseBreakpoint = 900.0;
+
+  void _cargarProductosSiCorresponde(BuildContext context) {
+    final authSucursalId = context.read<AuthController>().user?.sucursalId;
+    final ctrl = context.read<VentaController>();
+    final sucursalId = authSucursalId ?? ctrl.sucursalId;
+    if (sucursalId == null) return;
+    if (_sucursalIdCargada == sucursalId) return; // ya está cargado para esta sucursal
+
+    _sucursalIdCargada = sucursalId;
+    ctrl.cargarDatos(sucursalId: sucursalId).then((_) {
+      if (mounted) {
+        SchedulerBinding.instance.ensureVisualUpdate();
+      }
+    });
+  }
+
+  void _cambiarSucursal() {
+    setState(() {
+      _sucursalIdCargada = null; // fuerza que se vuelva a cargar al elegir la nueva
+    });
+    context.read<VentaController>().reiniciarSeleccionSucursal();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
-      final sucursalId = context.read<AuthController>().user?.sucursalId;
-      if (sucursalId != null) {
-        context.read<VentaController>().cargarDatos(sucursalId: sucursalId).then((_) {
-          if (mounted) {
-            SchedulerBinding.instance.ensureVisualUpdate();
-          }
-        });
-      }
-    }
+    _cargarProductosSiCorresponde(context);
   }
 
   @override
   void dispose() {
     _busquedaCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final authSucursalId = context.read<AuthController>().user?.sucursalId;
+    if (authSucursalId == null) {
+      context.read<VentaController>().reiniciarSeleccionSucursal();
+    }
   }
 
   Future<void> _onTapProducto(BuildContext context, dynamic item) async {
@@ -81,8 +103,17 @@ class _VentaScreenState extends State<VentaScreen> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final ctrl = context.watch<VentaController>();
+    final authSucursalId = context.read<AuthController>().user?.sucursalId;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < _collapseBreakpoint;
+
+    // ─── Paso 0: admin_empresa sin sucursal fija elige una primero ──────────
+    if (authSucursalId == null && ctrl.sucursalId == null) {
+      return const SelectorSucursalVenta();
+    }
+
+    // Ya se conoce la sucursal (propia o recién elegida): asegura la carga.
+    _cargarProductosSiCorresponde(context);
 
     // ─── Paso 1: seleccionar caja con sesión abierta ─────────────────────────
     if (ctrl.cajaId == null) {
@@ -114,6 +145,16 @@ class _VentaScreenState extends State<VentaScreen> {
                 style: VntlText.caption.copyWith(color: colors.textTertiary),
               ),
               const Spacer(),
+              if (context.read<AuthController>().user?.sucursalId == null) ...[
+                GestureDetector(
+                  onTap: _cambiarSucursal,
+                  child: Text(
+                    'Cambiar sucursal',
+                    style: VntlText.caption.copyWith(color: colors.primary),
+                  ),
+                ),
+                const SizedBox(width: VntlSpacing.md),
+              ],
               GestureDetector(
                 onTap: ctrl.cambiarCaja,
                 child: Text(

@@ -519,8 +519,12 @@ class _GastoCard extends StatelessWidget {
 
 class _SucursalSearchList extends StatefulWidget {
   final List<SucursalModel> sucursales;
+  final bool incluirTodas;
 
-  const _SucursalSearchList({required this.sucursales});
+  const _SucursalSearchList({
+    required this.sucursales,
+    this.incluirTodas = false,
+  });
 
   @override
   State<_SucursalSearchList> createState() => _SucursalSearchListState();
@@ -529,6 +533,7 @@ class _SucursalSearchList extends StatefulWidget {
 class _SucursalSearchListState extends State<_SucursalSearchList> {
   final _searchController = TextEditingController();
   late List<SucursalModel> _filtradas;
+  String _query = '';
 
   @override
   void initState() {
@@ -544,6 +549,7 @@ class _SucursalSearchListState extends State<_SucursalSearchList> {
 
   void _filtrar(String query) {
     setState(() {
+      _query = query;
       _filtradas = widget.sucursales
           .where((s) => s.nombre.toLowerCase().contains(query.toLowerCase()))
           .toList();
@@ -553,6 +559,7 @@ class _SucursalSearchListState extends State<_SucursalSearchList> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final mostrarTodas = widget.incluirTodas && _query.isEmpty;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -568,7 +575,7 @@ class _SucursalSearchListState extends State<_SucursalSearchList> {
         const SizedBox(height: VntlSpacing.md),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 320),
-          child: _filtradas.isEmpty
+          child: (_filtradas.isEmpty && !mostrarTodas)
               ? Padding(
                   padding: const EdgeInsets.all(VntlSpacing.lg),
                   child: Text(
@@ -576,16 +583,20 @@ class _SucursalSearchListState extends State<_SucursalSearchList> {
                     style: VntlText.body.copyWith(color: colors.textTertiary),
                   ),
                 )
-              : ListView.builder(
+              : ListView(
                   shrinkWrap: true,
-                  itemCount: _filtradas.length,
-                  itemBuilder: (_, i) {
-                    final item = _filtradas[i];
-                    return ListTile(
-                      title: Text(item.nombre, style: VntlText.body),
-                      onTap: () => Navigator.pop(context, item.id),
-                    );
-                  },
+                  children: [
+                    if (mostrarTodas)
+                      ListTile(
+                        leading: Icon(Icons.apartment_rounded, size: 18, color: colors.primary),
+                        title: Text('Todas las sucursales', style: VntlText.body),
+                        onTap: () => Navigator.pop(context, null),
+                      ),
+                    ..._filtradas.map((item) => ListTile(
+                          title: Text(item.nombre, style: VntlText.body),
+                          onTap: () => Navigator.pop(context, item.id),
+                        )),
+                  ],
                 ),
         ),
       ],

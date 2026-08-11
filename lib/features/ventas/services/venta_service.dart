@@ -37,8 +37,10 @@ class VentaService {
   }
 
   /// Lista las cajas que actualmente tienen sesión abierta.
-  Future<List<Map<String, dynamic>>> getCajasAbiertas() async {
-    final response = await _dio.get('/cajas-abiertas');
+  Future<List<Map<String, dynamic>>> getCajasAbiertas({int? sucursalId}) async {
+    final response = await _dio.get('/cajas-abiertas', queryParameters: {
+      if (sucursalId != null) 'sucursal_id': sucursalId,
+    });
     final list = response.data as List<dynamic>;
     return list.cast<Map<String, dynamic>>();
   }

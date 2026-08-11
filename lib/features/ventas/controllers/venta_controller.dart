@@ -40,6 +40,9 @@ class VentaController extends ChangeNotifier {
   int? _categoriaSeleccionadaId; // null = "Todas"
   String _busqueda = '';
 
+  int? _sucursalId;
+  int? get sucursalId => _sucursalId;
+
   final List<CarritoItemModel> _carrito = [];
 
   // ─── Caja y empleado verificado para esta sesión de venta en pantalla ──────
@@ -305,6 +308,16 @@ class VentaController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void reiniciarSeleccionSucursal() {
+    _sucursalId = null;
+    _cajaId = null;
+    _empleadoNumero = null;
+    _empleadoPin = null;
+    _empleadoNombreVerificado = null;
+    _carrito.clear();
+    notifyListeners();
+  }
+
   Future<void> cargarVentasDeLaSesion() async {
     _cargandoVentasDeLaSesion = true;
     notifyListeners();
@@ -325,7 +338,7 @@ class VentaController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      final raw = await _ventaService.getCajasAbiertas();
+      final raw = await _ventaService.getCajasAbiertas(sucursalId: _sucursalId);
       _cajasAbiertas = raw.map((json) => CajaModel.fromJson(json)).toList();
       _status = VentaStatus.success;
     } on DioException catch (e) {
@@ -411,6 +424,11 @@ class VentaController extends ChangeNotifier {
     _descuentoTipo = null;
     _descuentoValor = 0;
     _descuentoAutorizadoPor = null;
+    notifyListeners();
+  }
+
+  void seleccionarSucursal(int id) {
+    _sucursalId = id;
     notifyListeners();
   }
 

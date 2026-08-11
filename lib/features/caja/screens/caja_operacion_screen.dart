@@ -27,7 +27,10 @@ class _CajaOperacionScreenState extends State<CajaOperacionScreen> {
     super.didChangeDependencies();
     if (!_loaded) {
       _loaded = true;
-      context.read<CajaController>().loadCajas();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<CajaController>().loadCajas();
+      });
     }
   }
 
@@ -84,6 +87,19 @@ class _CajaOperacionScreenState extends State<CajaOperacionScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    if (cajaCtrl.status == CajaStatus.error) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(VntlSpacing.xl),
+          child: Text(
+            cajaCtrl.errorMessage ?? 'Error al cargar las cajas.',
+            style: VntlText.body,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     if (_cajaSeleccionada == null) {
       return _SelectorCajas(
         cajas: cajaCtrl.cajas,
@@ -115,7 +131,7 @@ class _CajaOperacionScreenState extends State<CajaOperacionScreen> {
       totalesPorMetodo: resumenCaja?.totalesPorMetodo ?? [],
       totalSesion: resumenCaja?.totalSesion ?? 0,
       efectivoEsperado: resumenCaja?.efectivoEsperado ?? 0,
-      efectivoCobradoBruto: resumenCaja?.efectivoCobradoBruto ?? 0, // ← nuevo
+      efectivoCobradoBruto: resumenCaja?.efectivoCobradoBruto ?? 0,
       ventas: resumenCaja?.ventas ?? [],
     );
   }
