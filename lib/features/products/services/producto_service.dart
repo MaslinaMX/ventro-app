@@ -91,6 +91,11 @@ class ProductoService {
     await _dio.delete('/productos/$id');
   }
 
+  Future<ProductoModel> reactivarProducto(int id) async {
+    final response = await _dio.patch('/productos/$id/reactivar');
+    return ProductoModel.fromJson(_extractMap(response.data));
+  }
+
   // --- Variantes (flujo de edición, pendiente) ---
 
   Future<ProductoVarianteModel> createVariante(

@@ -445,6 +445,52 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
     }
   }
 
+  Future<void> _eliminarProducto() async {
+    final producto = widget.productoExistente;
+    if (producto == null) return;
+
+    final colors = context.colors;
+    final confirmado = await VntlModal.show<bool>(
+      context,
+      title: 'Eliminar producto',
+      subtitle: '¿Estás seguro? Esta acción no se puede deshacer.',
+      width: 440,
+      content: Text(
+        'Se eliminará "${producto.nombre}" y todas sus variantes.',
+        style: VntlText.body.copyWith(color: colors.textSecondary),
+      ),
+      actions: [
+        VntlButton(
+          label: 'Cancelar',
+          variant: VntlButtonVariant.ghost,
+          onPressed: () => Navigator.pop(context, false),
+        ),
+        VntlButton(
+          label: 'Eliminar',
+          variant: VntlButtonVariant.danger,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+      ],
+    );
+
+    if (confirmado != true || !mounted) return;
+
+    final ctrl = context.read<ProductoController>();
+    final ok = await ctrl.eliminarProducto(producto.id);
+
+    if (!mounted) return;
+
+    if (ok) {
+      Navigator.pop(context); // regresa al listado
+    } else {
+      VntlToast.show(
+        context,
+        message: ctrl.errorMessage ?? 'No se pudo eliminar el producto',
+        type: VntlToastType.error,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -586,10 +632,30 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
                           _buildSeccionPrecioSimple(colors, sucursales),
 
                         const SizedBox(height: VntlSpacing.xl),
-                        VntlButton(
-                          label: _esEdicion ? 'Guardar cambios' : 'Crear producto',
-                          onPressed: ctrl.isSaving ? null : _guardar,
-                        ),
+                        if (_esEdicion)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: VntlButton(
+                                  label: 'Eliminar',
+                                  variant: VntlButtonVariant.danger,
+                                  onPressed: ctrl.isSaving ? null : _eliminarProducto,
+                                ),
+                              ),
+                              const SizedBox(width: VntlSpacing.md),
+                              Expanded(
+                                child: VntlButton(
+                                  label: 'Guardar cambios',
+                                  onPressed: ctrl.isSaving ? null : _guardar,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          VntlButton(
+                            label: 'Crear producto',
+                            onPressed: ctrl.isSaving ? null : _guardar,
+                          ),
                         const SizedBox(height: VntlSpacing.xl),
                       ],
                     ),

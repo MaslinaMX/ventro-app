@@ -429,6 +429,11 @@ class ProductoController extends ChangeNotifier {
           categoria: actual.categoria,
           variantes: variantesActualizadas,
         );
+      } else {
+        // El producto padre no estaba en la lista (estaba inactivo).
+        // El fix de backend ya lo reactivó junto con la variante, así
+        // que recargamos para que aparezca sin esperar F5.
+        await cargarProductos();
       }
 
       return reactivada;
