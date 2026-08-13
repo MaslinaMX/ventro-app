@@ -22,6 +22,10 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   String _currentRoute = '/principal';
 
+  // Cache de pantallas ya visitadas: evita destruir/recrear el State
+  // (y con él, los RepaintBoundary internos) cada vez que cambias de tab.
+  final Map<String, Widget> _screenCache = {};
+
   // Rutas a las que se puede navegar (ej. desde tarjetas del dashboard)
   // pero que NO aparecen como opción en el sidebar.
   static const _rutasOcultas = {'/ventas-todas'};
@@ -147,69 +151,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _currentRoute = route);
   }
 
-  Widget _buildCurrentScreen() {
-    switch (_currentRoute) {
+  Widget _construirPantalla(String route) {
+    switch (route) {
       case '/principal':
         return PrincipalScreen(
           onNavigateToGastos: () => _onRouteSelected('/gastos'),
           onNavigateToVentasTodas: () => _onRouteSelected('/ventas-todas'),
         );
-
       case '/caja':
         return const CajaOperacionScreen();
-
       case '/cotizaciones':
-        return _Placeholder(
-          label: 'Cotizaciones',
-          icon: Icons.receipt_long_rounded,
-        );
-
+        return _Placeholder(label: 'Cotizaciones', icon: Icons.receipt_long_rounded);
       case '/productos':
         return const ProductosScreen();
-
       case '/ventas':
-        return VentaScreen(
-          onNavigateACaja: () => _onRouteSelected('/caja'),
-        );
-
+        return VentaScreen(onNavigateACaja: () => _onRouteSelected('/caja'));
       case '/pedidos':
-        return _Placeholder(
-          label: 'Pedidos',
-          icon: Icons.checklist_rounded,
-        );
-
+        return _Placeholder(label: 'Pedidos', icon: Icons.checklist_rounded);
       case '/clientes':
         return const ClientesScreen();
-
       case '/inventario':
-        return InventarioScreen(
-          onNavigateToProductos: () => _onRouteSelected('/productos'),
-        );
-
+        return InventarioScreen(onNavigateToProductos: () => _onRouteSelected('/productos'));
       case '/proveedores':
-        return _Placeholder(
-          label: 'Proveedores',
-          icon: Icons.local_shipping_rounded,
-        );
-
+        return _Placeholder(label: 'Proveedores', icon: Icons.local_shipping_rounded);
       case '/gastos':
         return const GastosScreen();
-
       case '/ventas-todas':
         return const TodasVentasScreen();
-
       case '/reportes':
-        return _Placeholder(
-          label: 'Reportes',
-          icon: Icons.bar_chart_rounded,
-        );
-
+        return _Placeholder(label: 'Reportes', icon: Icons.bar_chart_rounded);
       default:
-        return _Placeholder(
-          label: 'Principal',
-          icon: Icons.speed_rounded,
-        );
+        return _Placeholder(label: 'Principal', icon: Icons.speed_rounded);
     }
+  }
+
+  Widget _buildCurrentScreen() {
+    // Construye la pantalla solo la PRIMERA vez que se visita esa ruta.
+    _screenCache.putIfAbsent(_currentRoute, () => _construirPantalla(_currentRoute));
+
+    final rutas = _screenCache.keys.toList(growable: false);
+    return IndexedStack(
+      index: rutas.indexOf(_currentRoute),
+      children: [for (final r in rutas) _screenCache[r]!],
+    );
   }
 
   @override
