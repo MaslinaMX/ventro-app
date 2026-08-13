@@ -132,6 +132,17 @@ class _CajaVentasSesionCard extends StatelessWidget {
                   cellBuilder: (v) => Text(v.cajero, style: VntlText.body),
                 ),
                 VntlTableColumn(
+                  label: 'Cliente',
+                  flex: 2,
+                  sortValue: (v) => v.cliente,
+                  cellBuilder: (v) => Text(
+                    v.cliente,
+                    style: VntlText.body.copyWith(color: colors.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                VntlTableColumn(
                   label: 'Método',
                   flex: 2,
                   cellBuilder: (v) => Wrap(

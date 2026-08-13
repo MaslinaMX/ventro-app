@@ -8,6 +8,7 @@ class VentaResumenModel {
   final List<MetodoPagoResumenModel> metodosPago;
   final String hora;
   final String estado;
+  final String cliente;
   final VentaDevolucionResumenModel? devolucion;
 
   const VentaResumenModel({
@@ -15,6 +16,7 @@ class VentaResumenModel {
     required this.numeroTicketCompleto,
     required this.total,
     required this.cajero,
+    required this.cliente,
     required this.metodosPago,
     required this.hora,
     required this.estado,
@@ -27,6 +29,7 @@ class VentaResumenModel {
       numeroTicketCompleto: json['numero_ticket_completo'] ?? '—',
       total: double.parse(json['total'].toString()),
       cajero: json['cajero'] ?? '—',
+      cliente: json['cliente'] ?? 'Público en general',
       metodosPago: (json['metodos_pago'] as List<dynamic>? ?? [])
           .map((m) => MetodoPagoResumenModel.fromJson(Map<String, dynamic>.from(m)))
           .toList(),

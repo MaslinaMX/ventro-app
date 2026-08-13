@@ -23,9 +23,13 @@ class _CantidadSelectorSheetState extends State<CantidadSelectorSheet> {
   int _cantidad = 1;
 
   /// Cuánto más se puede agregar desde aquí, considerando lo que ya está
-  /// en el carrito. En Ventas el límite SIEMPRE es el stock real,
-  /// sin importar allow_out_of_stock (eso solo aplica a Pedidos).
+  /// en el carrito. Si la variante tiene allow_out_of_stock=true, no hay
+  /// límite (se permite vender sin importar el stock real); si es false,
+  /// el límite es siempre el stock disponible.
   int _limiteDisponible(VentaController ctrl) {
+    if (widget.variante.allowOutOfStock) {
+      return 999999; // sin restricción real cuando se permite vender sin stock
+    }
     final stock = ctrl.stockDisponible(widget.variante.id);
     final yaEnCarrito = ctrl.cantidadEnCarrito(widget.variante.id);
     final restante = stock - yaEnCarrito;

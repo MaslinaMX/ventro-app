@@ -518,7 +518,7 @@ class _ProductoFormScreenState extends State<ProductoFormScreen> {
             ),
             Expanded(
               child: Align(
-                alignment: Alignment.topLeft,
+                alignment: Alignment.topCenter,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(VntlSpacing.xl),
                   child: ConstrainedBox(

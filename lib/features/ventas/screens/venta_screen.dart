@@ -9,6 +9,7 @@ import 'package:ventro_app/features/ventas/widgets/carrito_panel.dart';
 import 'package:ventro_app/features/products/models/categoria_model.dart';
 import 'package:ventro_app/features/ventas/widgets/producto_grid_card.dart';
 import 'package:ventro_app/features/ventas/widgets/selector_caja_venta.dart';
+import 'package:ventro_app/features/ventas/widgets/selector_cliente_venta.dart';
 import 'package:ventro_app/features/ventas/widgets/selector_sucursal_venta.dart';
 import 'package:ventro_app/features/ventas/widgets/verificar_empleado_venta.dart';
 
@@ -38,6 +39,13 @@ class _VentaScreenState extends State<VentaScreen> {
         SchedulerBinding.instance.ensureVisualUpdate();
       }
     });
+  }
+
+  Future<void> _cambiarCliente(BuildContext context, VentaController ctrl) async {
+    final resultado = await abrirSelectorClienteVenta(context);
+    if (resultado != null) {
+      ctrl.seleccionarCliente(id: resultado.id, nombre: resultado.nombre);
+    }
   }
 
   void _cambiarSucursal() {
@@ -127,6 +135,21 @@ class _VentaScreenState extends State<VentaScreen> {
       return const VerificarEmpleadoVenta();
     }
 
+// ─── Paso 3: Seleccionar cliente o PEG ──────────────────────────
+    if (!ctrl.clienteYaElegido) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final resultado = await abrirSelectorClienteVenta(context);
+        if (!mounted) return;
+        if (resultado != null) {
+          ctrl.seleccionarCliente(id: resultado.id, nombre: resultado.nombre);
+        }
+        // Si el usuario cierra sin elegir (back button), se vuelve a
+        // preguntar en el próximo build — no hay showClose así que esto
+        // normalmente no pasa salvo con el botón atrás del sistema.
+      });
+      return const Center(child: CircularProgressIndicator());
+    }
     if (ctrl.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -140,9 +163,38 @@ class _VentaScreenState extends State<VentaScreen> {
             children: [
               Icon(Icons.badge_rounded, size: 16, color: colors.textTertiary),
               const SizedBox(width: VntlSpacing.xs),
-              Text(
-                'Vendiendo como ${ctrl.empleadoNombreVerificado}',
-                style: VntlText.caption.copyWith(color: colors.textTertiary),
+              RichText(
+                text: TextSpan(
+                  style: VntlText.caption.copyWith(color: colors.info),
+                  children: [
+                    TextSpan(
+                      text: 'Vendiendo como: ',
+                      style: TextStyle(color: colors.textTertiary, fontWeight: FontWeight.w600),
+                    ),
+                    TextSpan(text: ctrl.empleadoNombreVerificado),
+                  ],
+                ),
+              ),
+              const SizedBox(width: VntlSpacing.md),
+              Icon(Icons.person_outline_rounded, size: 16, color: colors.textTertiary),
+              const SizedBox(width: VntlSpacing.xs),
+              VntlTooltip(
+                message: 'Toca para cambiar el cliente',
+                child: GestureDetector(
+                  onTap: () => _cambiarCliente(context, ctrl),
+                  child: RichText(
+                    text: TextSpan(
+                      style: VntlText.caption.copyWith(color: colors.primary),
+                      children: [
+                        TextSpan(
+                          text: 'Venta a: ',
+                          style: TextStyle(color: colors.textTertiary, fontWeight: FontWeight.w600),
+                        ),
+                        TextSpan(text: ctrl.clienteNombreMostrado),
+                      ],
+                    ),
+                  ),
+                ),
               ),
               const Spacer(),
               if (context.read<AuthController>().user?.sucursalId == null) ...[

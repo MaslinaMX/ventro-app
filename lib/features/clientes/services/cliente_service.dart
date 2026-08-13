@@ -1,4 +1,5 @@
 import 'package:ventro_app/core/network/api_client.dart';
+import 'package:ventro_app/features/clientes/models/cliente_estadisticas_model.dart';
 import 'package:ventro_app/features/clientes/models/cliente_model.dart';
 
 /// Service de clientes — usa ApiClient.instance (autenticado, con
@@ -40,5 +41,10 @@ class ClienteService {
   /// caso el controller debe sugerir desactivar en vez de eliminar.
   Future<void> eliminarCliente(int id) async {
     await _dio.delete('/clientes/$id');
+  }
+
+  Future<ClienteEstadisticasModel> getEstadisticas(int clienteId) async {
+    final response = await _dio.get('/clientes/$clienteId/estadisticas');
+    return ClienteEstadisticasModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

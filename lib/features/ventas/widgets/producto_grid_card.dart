@@ -23,7 +23,7 @@ class ProductoGridCard extends StatelessWidget {
     final imagen = variante.imagenPrincipal;
     final ctrl = context.watch<VentaController>();
     final stock = ctrl.stockDisponible(variante.id);
-    final agotado = stock <= 0;
+    final agotado = stock <= 0 && !variante.allowOutOfStock;
 
     return GestureDetector(
       onTap: agotado ? null : onTap,

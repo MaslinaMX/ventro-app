@@ -161,6 +161,28 @@ class VentaController extends ChangeNotifier {
     notifyListeners();
   }
 
+// ─── Cliente de la venta actual ──────────────────────────────────────────
+  int? _clienteId;
+  String? _clienteNombre;
+  bool _clienteYaElegido = false;
+
+  int? get clienteId => _clienteId;
+  String get clienteNombreMostrado => _clienteNombre ?? 'Público en general';
+  bool get clienteYaElegido => _clienteYaElegido;
+
+  void seleccionarCliente({int? id, String? nombre}) {
+    _clienteId = id;
+    _clienteNombre = nombre;
+    _clienteYaElegido = true;
+    notifyListeners();
+  }
+
+  void _limpiarCliente() {
+    _clienteId = null;
+    _clienteNombre = null;
+    _clienteYaElegido = false;
+  }
+
   // ─── Catálogo + stock ────────────────────────────────────────────────────────
 
   Future<void> cargarDatos({required int sucursalId}) async {
@@ -217,7 +239,7 @@ class VentaController extends ChangeNotifier {
     final disponible = stockDisponible(variante.id);
     final yaEnCarrito = cantidadEnCarrito(variante.id);
 
-    if (yaEnCarrito + cantidad > disponible) {
+    if (!variante.allowOutOfStock && yaEnCarrito + cantidad > disponible) {
       _errorMessage =
           'Solo hay ${disponible.toStringAsFixed(0)} disponibles de "${variante.nombre}".';
       notifyListeners();
@@ -233,7 +255,6 @@ class VentaController extends ChangeNotifier {
       _carrito
           .add(CarritoItemModel(variante: variante, productoPadre: producto, cantidad: cantidad));
     }
-    debugPrint('🟠 agregarAlCarrito notifyListeners llamado, carrito.length=${_carrito.length}');
     notifyListeners();
   }
 
@@ -243,7 +264,7 @@ class VentaController extends ChangeNotifier {
 
     final item = _carrito[index];
     final disponible = stockDisponible(varianteId);
-    if (item.cantidad + 1 > disponible) {
+    if (!item.variante.allowOutOfStock && item.cantidad + 1 > disponible) {
       _errorMessage =
           'Solo hay ${disponible.toStringAsFixed(0)} disponibles de "${item.variante.nombre}".';
       notifyListeners();
@@ -315,6 +336,7 @@ class VentaController extends ChangeNotifier {
     _empleadoPin = null;
     _empleadoNombreVerificado = null;
     _carrito.clear();
+    _limpiarCliente();
     notifyListeners();
   }
 
@@ -377,6 +399,7 @@ class VentaController extends ChangeNotifier {
     _descuentoTipo = null;
     _descuentoValor = 0;
     _descuentoAutorizadoPor = null;
+    _limpiarCliente();
     notifyListeners();
   }
 
@@ -424,6 +447,7 @@ class VentaController extends ChangeNotifier {
     _descuentoTipo = null;
     _descuentoValor = 0;
     _descuentoAutorizadoPor = null;
+    _limpiarCliente();
     notifyListeners();
   }
 
@@ -465,8 +489,10 @@ class VentaController extends ChangeNotifier {
         items: items,
         pagos: pagos,
         descuento: descuentoMonto,
+        clienteId: _clienteId,
       );
       _carrito.clear();
+      _limpiarCliente();
       _descuentoTipo = null;
       _descuentoValor = 0;
       _descuentoAutorizadoPor = null;

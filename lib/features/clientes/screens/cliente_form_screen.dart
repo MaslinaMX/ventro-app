@@ -121,122 +121,138 @@ class _ClienteFormScreenState extends State<ClienteFormScreen> {
     final colors = context.colors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_esNuevo ? 'Nuevo cliente' : 'Editar cliente'),
-      ),
-      body: Form(
-        key: _formKey,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(
-              padding: const EdgeInsets.all(VntlSpacing.lg),
-              children: [
-                _SeccionTitulo('Datos generales'),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(
-                  hint: 'Nombre completo o comercial',
-                  controller: _nombreCtrl,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'El nombre es obligatorio' : null,
-                ),
-                const SizedBox(height: VntlSpacing.md),
-                _TipoClienteSelector(
-                  valor: _tipo,
-                  onChanged: (t) => setState(() => _tipo = t),
-                ),
-                const SizedBox(height: VntlSpacing.xl),
-                _SeccionTitulo('Contacto'),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(
-                  hint: 'Teléfono',
-                  controller: _telefonoCtrl,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [PhoneInputFormatter()],
-                ),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(
-                  hint: 'Correo electrónico',
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return null;
-                    final valido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v.trim());
-                    return valido ? null : 'Correo no válido';
-                  },
-                ),
-                const SizedBox(height: VntlSpacing.xl),
-                _SeccionTitulo('Dirección'),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(hint: 'Dirección', controller: _direccionCtrl),
-                const SizedBox(height: VntlSpacing.md),
-                Row(
-                  children: [
-                    Expanded(child: VntlInput(hint: 'Ciudad', controller: _ciudadCtrl)),
-                    const SizedBox(width: VntlSpacing.md),
-                    Expanded(child: VntlInput(hint: 'Estado', controller: _estadoCtrl)),
-                  ],
-                ),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(
-                  hint: 'Código postal',
-                  controller: _cpCtrl,
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: VntlSpacing.xl),
-                _SeccionTitulo('Facturación'),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(
-                  hint: 'RFC',
-                  controller: _rfcCtrl,
-                ),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(hint: 'Razón social', controller: _razonSocialCtrl),
-                const SizedBox(height: VntlSpacing.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: VntlInput(
-                        hint: 'Régimen fiscal (clave SAT)',
-                        controller: _regimenFiscalCtrl,
-                      ),
-                    ),
-                    const SizedBox(width: VntlSpacing.md),
-                    Expanded(
-                      child: VntlInput(hint: 'Uso CFDI (clave SAT)', controller: _usoCfdiCtrl),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: VntlSpacing.xl),
-                _SeccionTitulo('Notas'),
-                const SizedBox(height: VntlSpacing.md),
-                VntlInput(
-                  hint: 'Notas adicionales (opcional)',
-                  controller: _notasCtrl,
-                  maxLines: 3,
-                ),
-                const SizedBox(height: VntlSpacing.xl),
-                if (!_esNuevo)
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('Cliente activo',
-                        style: VntlText.body.copyWith(color: colors.textPrimary)),
-                    subtitle: Text(
-                      'Desactiva en vez de eliminar si ya tiene ventas asociadas',
-                      style: VntlText.caption.copyWith(color: colors.textTertiary),
-                    ),
-                    value: _activo,
-                    onChanged: (v) => setState(() => _activo = v),
-                  ),
-                const SizedBox(height: VntlSpacing.xl2),
-                VntlButton(
-                  label: _esNuevo ? 'Crear cliente' : 'Guardar cambios',
-                  onPressed: _guardando ? null : _guardar,
-                  loading: _guardando,
-                ),
-              ],
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(gradient: context.backgroundGradient),
+        child: Column(
+          children: [
+            VntlAppBar(
+              title: _esNuevo ? 'Nuevo cliente' : 'Editar cliente',
+              leading: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(Icons.arrow_back_rounded, color: colors.textSecondary, size: 20),
+              ),
             ),
-          ),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 640),
+                    child: ListView(
+                      padding: const EdgeInsets.all(VntlSpacing.lg),
+                      children: [
+                        _SeccionTitulo('Datos generales'),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(
+                          hint: 'Nombre completo o comercial',
+                          controller: _nombreCtrl,
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'El nombre es obligatorio' : null,
+                        ),
+                        const SizedBox(height: VntlSpacing.md),
+                        _TipoClienteSelector(
+                          valor: _tipo,
+                          onChanged: (t) => setState(() => _tipo = t),
+                        ),
+                        const SizedBox(height: VntlSpacing.xl),
+                        _SeccionTitulo('Contacto'),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(
+                          hint: 'Teléfono',
+                          controller: _telefonoCtrl,
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [PhoneInputFormatter()],
+                        ),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(
+                          hint: 'Correo electrónico',
+                          controller: _emailCtrl,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return null;
+                            final valido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v.trim());
+                            return valido ? null : 'Correo no válido';
+                          },
+                        ),
+                        const SizedBox(height: VntlSpacing.xl),
+                        _SeccionTitulo('Dirección'),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(hint: 'Dirección', controller: _direccionCtrl),
+                        const SizedBox(height: VntlSpacing.md),
+                        Row(
+                          children: [
+                            Expanded(child: VntlInput(hint: 'Ciudad', controller: _ciudadCtrl)),
+                            const SizedBox(width: VntlSpacing.md),
+                            Expanded(child: VntlInput(hint: 'Estado', controller: _estadoCtrl)),
+                          ],
+                        ),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(
+                          hint: 'Código postal',
+                          controller: _cpCtrl,
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: VntlSpacing.xl),
+                        _SeccionTitulo('Facturación'),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(
+                          hint: 'RFC',
+                          controller: _rfcCtrl,
+                        ),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(hint: 'Razón social', controller: _razonSocialCtrl),
+                        const SizedBox(height: VntlSpacing.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: VntlInput(
+                                hint: 'Régimen fiscal (clave SAT)',
+                                controller: _regimenFiscalCtrl,
+                              ),
+                            ),
+                            const SizedBox(width: VntlSpacing.md),
+                            Expanded(
+                              child:
+                                  VntlInput(hint: 'Uso CFDI (clave SAT)', controller: _usoCfdiCtrl),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: VntlSpacing.xl),
+                        _SeccionTitulo('Notas'),
+                        const SizedBox(height: VntlSpacing.md),
+                        VntlInput(
+                          hint: 'Notas adicionales (opcional)',
+                          controller: _notasCtrl,
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: VntlSpacing.xl),
+                        if (!_esNuevo)
+                          SwitchListTile(
+                            activeThumbColor: colors.primary,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Cliente activo',
+                                style: VntlText.body.copyWith(color: colors.textPrimary)),
+                            subtitle: Text(
+                              'Desactiva en vez de eliminar si ya tiene ventas asociadas',
+                              style: VntlText.caption.copyWith(color: colors.textTertiary),
+                            ),
+                            value: _activo,
+                            onChanged: (v) => setState(() => _activo = v),
+                          ),
+                        const SizedBox(height: VntlSpacing.xl2),
+                        VntlButton(
+                          label: _esNuevo ? 'Crear cliente' : 'Guardar cambios',
+                          onPressed: _guardando ? null : _guardar,
+                          loading: _guardando,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
