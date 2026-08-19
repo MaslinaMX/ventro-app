@@ -110,208 +110,223 @@ class _VentaScreenState extends State<VentaScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final ctrl = context.watch<VentaController>();
+    // read en vez de watch: la suscripción real a VentaController la hace el
+    // ListenableBuilder de más abajo (addListener directo sobre el
+    // ChangeNotifier), no el InheritedProvider. En Flutter Web release mode
+    // hay un bug conocido (flutter/flutter#137319) donde varios
+    // notifyListeners() encadenados dentro de una misma ráfaga async no
+    // logran propagar el rebuild vía context.watch/InheritedWidget — la UI
+    // se queda "pegada" hasta forzar un relayout (ej. resicear la ventana).
+    // ListenableBuilder usa otro camino (addListener puro) que no sufre ese
+    // problema. authSucursalId ya usaba read, así que no cambia.
+    final ctrl = context.read<VentaController>();
     final authSucursalId = context.read<AuthController>().user?.sucursalId;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < _collapseBreakpoint;
 
-    // ─── Paso 0: admin_empresa sin sucursal fija elige una primero ──────────
-    if (authSucursalId == null && ctrl.sucursalId == null) {
-      return const SelectorSucursalVenta();
-    }
-
-    // Ya se conoce la sucursal (propia o recién elegida): asegura la carga.
-    _cargarProductosSiCorresponde(context);
-
-    // ─── Paso 1: seleccionar caja con sesión abierta ─────────────────────────
-    if (ctrl.cajaId == null) {
-      return SelectorCajaVenta(
-        onIrACaja: widget.onNavigateACaja,
-      );
-    }
-
-    // ─── Paso 2: verificar número de empleado + PIN ──────────────────────────
-    if (!ctrl.empleadoVerificado) {
-      return const VerificarEmpleadoVenta();
-    }
-
-// ─── Paso 3: Seleccionar cliente o PEG ──────────────────────────
-    if (!ctrl.clienteYaElegido) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        final resultado = await abrirSelectorClienteVenta(context);
-        if (!mounted) return;
-        if (resultado != null) {
-          ctrl.seleccionarCliente(id: resultado.id, nombre: resultado.nombre);
+    return ListenableBuilder(
+      listenable: ctrl,
+      builder: (context, _) {
+        // ─── Paso 0: admin_empresa sin sucursal fija elige una primero ──────
+        if (authSucursalId == null && ctrl.sucursalId == null) {
+          return const SelectorSucursalVenta();
         }
-        // Si el usuario cierra sin elegir (back button), se vuelve a
-        // preguntar en el próximo build — no hay showClose así que esto
-        // normalmente no pasa salvo con el botón atrás del sistema.
-      });
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (ctrl.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
-    final contenido = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(VntlSpacing.lg, VntlSpacing.lg, VntlSpacing.lg, 0),
-          child: Row(
-            children: [
-              Icon(Icons.badge_rounded, size: 16, color: colors.textTertiary),
-              const SizedBox(width: VntlSpacing.xs),
-              RichText(
-                text: TextSpan(
-                  style: VntlText.caption.copyWith(color: colors.info),
-                  children: [
-                    TextSpan(
-                      text: 'Vendiendo como: ',
-                      style: TextStyle(color: colors.textTertiary, fontWeight: FontWeight.w600),
-                    ),
-                    TextSpan(text: ctrl.empleadoNombreVerificado),
-                  ],
-                ),
-              ),
-              const SizedBox(width: VntlSpacing.md),
-              Icon(Icons.person_outline_rounded, size: 16, color: colors.textTertiary),
-              const SizedBox(width: VntlSpacing.xs),
-              VntlTooltip(
-                message: 'Toca para cambiar el cliente',
-                child: GestureDetector(
-                  onTap: () => _cambiarCliente(context, ctrl),
-                  child: RichText(
+        // Ya se conoce la sucursal (propia o recién elegida): asegura la carga.
+        _cargarProductosSiCorresponde(context);
+
+        // ─── Paso 1: seleccionar caja con sesión abierta ────────────────────
+        if (ctrl.cajaId == null) {
+          return SelectorCajaVenta(
+            onIrACaja: widget.onNavigateACaja,
+          );
+        }
+
+        // ─── Paso 2: verificar número de empleado + PIN ─────────────────────
+        if (!ctrl.empleadoVerificado) {
+          return const VerificarEmpleadoVenta();
+        }
+
+        // ─── Paso 3: Seleccionar cliente o PEG ───────────────────────────────
+        if (!ctrl.clienteYaElegido) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            if (!mounted) return;
+            final resultado = await abrirSelectorClienteVenta(context);
+            if (!mounted) return;
+            if (resultado != null) {
+              ctrl.seleccionarCliente(id: resultado.id, nombre: resultado.nombre);
+            }
+            // Si el usuario cierra sin elegir (back button), se vuelve a
+            // preguntar en el próximo build — no hay showClose así que esto
+            // normalmente no pasa salvo con el botón atrás del sistema.
+          });
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (ctrl.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final contenido = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(VntlSpacing.lg, VntlSpacing.lg, VntlSpacing.lg, 0),
+              child: Row(
+                children: [
+                  Icon(Icons.badge_rounded, size: 16, color: colors.textTertiary),
+                  const SizedBox(width: VntlSpacing.xs),
+                  RichText(
                     text: TextSpan(
-                      style: VntlText.caption.copyWith(color: colors.primary),
+                      style: VntlText.caption.copyWith(color: colors.info),
                       children: [
                         TextSpan(
-                          text: 'Venta a: ',
+                          text: 'Vendiendo como: ',
                           style: TextStyle(color: colors.textTertiary, fontWeight: FontWeight.w600),
                         ),
-                        TextSpan(text: ctrl.clienteNombreMostrado),
+                        TextSpan(text: ctrl.empleadoNombreVerificado),
                       ],
                     ),
                   ),
-                ),
-              ),
-              const Spacer(),
-              if (context.read<AuthController>().user?.sucursalId == null) ...[
-                GestureDetector(
-                  onTap: _cambiarSucursal,
-                  child: Text(
-                    'Cambiar sucursal',
-                    style: VntlText.caption.copyWith(color: colors.primary),
-                  ),
-                ),
-                const SizedBox(width: VntlSpacing.md),
-              ],
-              GestureDetector(
-                onTap: ctrl.cambiarCaja,
-                child: Text(
-                  'Cambiar caja',
-                  style: VntlText.caption.copyWith(color: colors.primary),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(VntlSpacing.lg),
-          child: VntlInput(
-            hint: 'Buscar producto o SKU...',
-            controller: _busquedaCtrl,
-            prefixIcon: Icons.search_rounded,
-            onChanged: ctrl.buscar,
-          ),
-        ),
-        SizedBox(
-          height: 44,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: VntlSpacing.lg),
-            children: [
-              _CategoriaChip(
-                label: 'Todas',
-                selected: ctrl.categoriaSeleccionadaId == null,
-                onTap: () => ctrl.filtrarPorCategoria(null),
-              ),
-              const SizedBox(width: VntlSpacing.sm),
-              ...ctrl.categorias.map((cat) => Padding(
-                    padding: const EdgeInsets.only(right: VntlSpacing.sm),
-                    child: _CategoriaChip(
-                      label: cat.nombre,
-                      selected: ctrl.categoriaSeleccionadaId == cat.id,
-                      onTap: () => ctrl.filtrarPorCategoria(cat.id),
-                      categoria: cat,
+                  const SizedBox(width: VntlSpacing.md),
+                  Icon(Icons.person_outline_rounded, size: 16, color: colors.textTertiary),
+                  const SizedBox(width: VntlSpacing.xs),
+                  VntlTooltip(
+                    message: 'Toca para cambiar el cliente',
+                    child: GestureDetector(
+                      onTap: () => _cambiarCliente(context, ctrl),
+                      child: RichText(
+                        text: TextSpan(
+                          style: VntlText.caption.copyWith(color: colors.primary),
+                          children: [
+                            TextSpan(
+                              text: 'Venta a: ',
+                              style: TextStyle(
+                                  color: colors.textTertiary, fontWeight: FontWeight.w600),
+                            ),
+                            TextSpan(text: ctrl.clienteNombreMostrado),
+                          ],
+                        ),
+                      ),
                     ),
-                  )),
-            ],
-          ),
-        ),
-        const SizedBox(height: VntlSpacing.md),
-        Expanded(
-            child: ctrl.variantesVisibles.isEmpty
-                ? Center(
+                  ),
+                  const Spacer(),
+                  if (context.read<AuthController>().user?.sucursalId == null) ...[
+                    GestureDetector(
+                      onTap: _cambiarSucursal,
+                      child: Text(
+                        'Cambiar sucursal',
+                        style: VntlText.caption.copyWith(color: colors.primary),
+                      ),
+                    ),
+                    const SizedBox(width: VntlSpacing.md),
+                  ],
+                  GestureDetector(
+                    onTap: ctrl.cambiarCaja,
                     child: Text(
-                      'Sin productos para mostrar',
-                      style: VntlText.body.copyWith(color: colors.textTertiary),
+                      'Cambiar caja',
+                      style: VntlText.caption.copyWith(color: colors.primary),
                     ),
-                  )
-                : RepaintBoundary(
-                    key: ValueKey(
-                        'grid-${ctrl.variantesVisibles.length}-${ctrl.busqueda}-${ctrl.categoriaSeleccionadaId}'),
-                    child: GridView.builder(
-                      padding: EdgeInsets.fromLTRB(
-                        VntlSpacing.lg,
-                        0,
-                        VntlSpacing.lg,
-                        isMobile ? 96 : VntlSpacing.lg, // espacio para el FAB
-                      ),
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: isMobile ? 140 : 160,
-                        mainAxisSpacing: VntlSpacing.md,
-                        crossAxisSpacing: VntlSpacing.md,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemCount: ctrl.variantesVisibles.length,
-                      itemBuilder: (context, index) {
-                        final item = ctrl.variantesVisibles[index];
-                        return ProductoGridCard(
-                          variante: item.variante,
-                          producto: item.producto,
-                          onTap: () => _onTapProducto(context, item),
-                        );
-                      },
-                    ),
-                  )),
-      ],
-    );
-
-    final pantalla = isMobile
-        ? Scaffold(
-            backgroundColor: Colors.transparent,
-            body: contenido,
-            floatingActionButton: ctrl.carrito.isEmpty
-                ? null
-                : _CarritoFab(
-                    cantidad: ctrl.cantidadItemsCarrito,
-                    total: ctrl.totalCarrito,
-                    onTap: () => _abrirCarritoMovil(context),
                   ),
-          )
-        : Row(
-            children: [
-              Expanded(child: contenido),
-              const CarritoPanel(),
-            ],
-          );
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(VntlSpacing.lg),
+              child: VntlInput(
+                hint: 'Buscar producto o SKU...',
+                controller: _busquedaCtrl,
+                prefixIcon: Icons.search_rounded,
+                onChanged: ctrl.buscar,
+              ),
+            ),
+            SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: VntlSpacing.lg),
+                children: [
+                  _CategoriaChip(
+                    label: 'Todas',
+                    selected: ctrl.categoriaSeleccionadaId == null,
+                    onTap: () => ctrl.filtrarPorCategoria(null),
+                  ),
+                  const SizedBox(width: VntlSpacing.sm),
+                  ...ctrl.categorias.map((cat) => Padding(
+                        padding: const EdgeInsets.only(right: VntlSpacing.sm),
+                        child: _CategoriaChip(
+                          label: cat.nombre,
+                          selected: ctrl.categoriaSeleccionadaId == cat.id,
+                          onTap: () => ctrl.filtrarPorCategoria(cat.id),
+                          categoria: cat,
+                        ),
+                      )),
+                ],
+              ),
+            ),
+            const SizedBox(height: VntlSpacing.md),
+            Expanded(
+                child: ctrl.variantesVisibles.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Sin productos para mostrar',
+                          style: VntlText.body.copyWith(color: colors.textTertiary),
+                        ),
+                      )
+                    : RepaintBoundary(
+                        key: ValueKey(
+                            'grid-${ctrl.variantesVisibles.length}-${ctrl.busqueda}-${ctrl.categoriaSeleccionadaId}'),
+                        child: GridView.builder(
+                          padding: EdgeInsets.fromLTRB(
+                            VntlSpacing.lg,
+                            0,
+                            VntlSpacing.lg,
+                            isMobile ? 96 : VntlSpacing.lg, // espacio para el FAB
+                          ),
+                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: isMobile ? 140 : 160,
+                            mainAxisSpacing: VntlSpacing.md,
+                            crossAxisSpacing: VntlSpacing.md,
+                            childAspectRatio: 0.8,
+                          ),
+                          itemCount: ctrl.variantesVisibles.length,
+                          itemBuilder: (context, index) {
+                            final item = ctrl.variantesVisibles[index];
+                            return ProductoGridCard(
+                              variante: item.variante,
+                              producto: item.producto,
+                              onTap: () => _onTapProducto(context, item),
+                            );
+                          },
+                        ),
+                      )),
+          ],
+        );
 
-    debugPrint('🔵 VentaScreen build ejecutado: ${DateTime.now()}');
-    return Listener(
-      onPointerDown: (_) => ctrl.registrarActividad(),
-      child: pantalla,
+        final pantalla = isMobile
+            ? Scaffold(
+                backgroundColor: Colors.transparent,
+                body: contenido,
+                floatingActionButton: ctrl.carrito.isEmpty
+                    ? null
+                    : _CarritoFab(
+                        cantidad: ctrl.cantidadItemsCarrito,
+                        total: ctrl.totalCarrito,
+                        onTap: () => _abrirCarritoMovil(context),
+                      ),
+              )
+            : Row(
+                children: [
+                  Expanded(child: contenido),
+                  const CarritoPanel(),
+                ],
+              );
+
+        debugPrint('🔵 VentaScreen build ejecutado: ${DateTime.now()}');
+        return Listener(
+          onPointerDown: (_) => ctrl.registrarActividad(),
+          child: pantalla,
+        );
+      },
     );
   }
 }

@@ -117,4 +117,15 @@ class InventarioService {
         .map((e) => MovimientoInventarioModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
+
+  Future<List<int>> descargarStockPdf(int sucursalId, {String? search}) async {
+    final response = await _dio.get(
+      '/inventario/sucursales/$sucursalId/stock/pdf',
+      queryParameters: {
+        if (search != null && search.isNotEmpty) 'search': search,
+      },
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data as List<int>;
+  }
 }

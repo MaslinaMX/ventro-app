@@ -41,7 +41,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final List<_SettingsItem> _items = const [
     _SettingsItem(label: 'General', icon: Icons.store_rounded, key: 'general'),
     _SettingsItem(label: 'Usuarios', icon: Icons.people_rounded, key: 'usuarios'),
-    _SettingsItem(label: 'Vendedores', icon: Icons.badge_rounded, key: 'vendedores'),
     _SettingsItem(label: 'Sucursales', icon: Icons.location_on_rounded, key: 'sucursales'),
     _SettingsItem(label: 'Cajas', icon: Icons.point_of_sale_rounded, key: 'cajas'),
     _SettingsItem(label: 'Productos', icon: Icons.inventory_2_rounded, key: 'productos'),

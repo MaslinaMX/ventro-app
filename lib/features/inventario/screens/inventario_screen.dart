@@ -8,6 +8,7 @@ import 'package:ventro_app/features/auth/models/user_model.dart';
 import 'package:ventro_app/features/inventario/controllers/inventario_controller.dart';
 import 'package:ventro_app/features/inventario/models/inventario_stock_model.dart';
 import 'package:ventro_app/features/inventario/models/movimiento_inventario_model.dart';
+import 'package:ventro_app/features/inventario/screens/inventario_actual_screen.dart';
 import 'package:ventro_app/features/inventario/screens/movimientos_screen.dart';
 import 'package:ventro_app/features/inventario/widgets/ajuste_rapido_sheet.dart';
 import 'package:ventro_app/features/inventario/widgets/detalle_stock_list.dart';
@@ -215,6 +216,15 @@ class _InventarioScreenState extends State<InventarioScreen> {
             ],
           ),
         ),
+        VntlButton(
+          label: 'Inventario actual',
+          icon: Icons.list_alt_rounded,
+          fullWidth: false,
+          size: VntlButtonSize.sm,
+          variant: VntlButtonVariant.secondary, // ajusta el nombre si tu enum es distinto
+          onPressed: _abrirInventarioActual,
+        ),
+        const SizedBox(width: VntlSpacing.sm),
         VntlButton(
           label: 'Ajuste',
           icon: Icons.tune_rounded,
@@ -425,6 +435,26 @@ class _InventarioScreenState extends State<InventarioScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _abrirInventarioActual() {
+    if (_sucursalSeleccionadaId == null) return;
+    final nombre = _sucursalNombreFijo ??
+        (_sucursales.isEmpty
+            ? '—'
+            : _sucursales
+                .firstWhere((s) => s.id == _sucursalSeleccionadaId, orElse: () => _sucursales.first)
+                .nombre);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => InventarioActualScreen(
+          sucursalId: _sucursalSeleccionadaId!,
+          sucursalNombre: nombre,
+        ),
+      ),
     );
   }
 

@@ -96,22 +96,18 @@ class CarritoPanel extends StatelessWidget {
           ),
           Divider(color: colors.border, height: 0.5),
           Expanded(
-            child: ctrl.carrito.isEmpty
-                ? _CarritoVacio()
-                : RepaintBoundary(
-                      key: ValueKey('carrito-${ctrl.carrito.length}-${ctrl.totalCarrito}'),
-                      child: ListView.separated(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(VntlSpacing.md),
-                    itemCount: ctrl.carrito.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: VntlSpacing.sm),
-                    itemBuilder: (context, index) {
-                      final item = ctrl.carrito[index];
-                      return _CarritoItemTile(item: item);
-                    },
-                  ),
-          )
-          ),
+              child: ctrl.carrito.isEmpty
+                  ? _CarritoVacio()
+                  : ListView.separated(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(VntlSpacing.md),
+                      itemCount: ctrl.carrito.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: VntlSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final item = ctrl.carrito[index];
+                        return _CarritoItemTile(item: item);
+                      },
+                    )),
           if (ctrl.carrito.isNotEmpty) ...[
             Divider(color: colors.border, height: 0.5),
             Padding(

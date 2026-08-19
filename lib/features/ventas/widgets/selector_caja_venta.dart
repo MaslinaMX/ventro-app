@@ -13,6 +13,11 @@ class SelectorCajaVenta extends StatefulWidget {
   State<SelectorCajaVenta> createState() => _SelectorCajaVentaState();
 }
 
+// CAMBIO: envolver el build en ListenableBuilder que escucha directo al
+// ChangeNotifier (addListener puro) en vez de depender de
+// context.watch<VentaController>() / InheritedProvider, que en release
+// web a veces no propaga el rebuild tras notifyListeners() encadenados.
+
 class _SelectorCajaVentaState extends State<SelectorCajaVenta> {
   bool _loaded = false;
 
@@ -27,71 +32,78 @@ class _SelectorCajaVentaState extends State<SelectorCajaVenta> {
 
   @override
   Widget build(BuildContext context) {
+    // context.read en vez de watch: solo para obtener la instancia, sin
+    // suscribirse vía InheritedWidget (eso lo hace ListenableBuilder).
+    final ctrl = context.read<VentaController>();
     final colors = context.colors;
-    final ctrl = context.watch<VentaController>();
 
-    if (ctrl.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return ListenableBuilder(
+      listenable: ctrl,
+      builder: (context, _) {
+        if (ctrl.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    if (ctrl.cajasAbiertas.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.lock_clock_rounded, size: 48, color: colors.textTertiary),
-            const SizedBox(height: VntlSpacing.lg),
-            Text('No hay cajas abiertas', style: VntlText.h3),
-            const SizedBox(height: VntlSpacing.sm),
-            Text(
-              'Abre una caja desde el módulo de Caja para empezar a vender.',
-              style: VntlText.body.copyWith(color: colors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: VntlSpacing.xl),
-            Center(
-              child: IntrinsicWidth(
-                child: VntlButton(
-                  label: 'Abrir Caja',
-                  variant: VntlButtonVariant.ghost,
-                  icon: Icons.lock_open_rounded,
-                  onPressed: widget.onIrACaja,
+        if (ctrl.cajasAbiertas.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_clock_rounded, size: 48, color: colors.textTertiary),
+                const SizedBox(height: VntlSpacing.lg),
+                Text('No hay cajas abiertas', style: VntlText.h3),
+                const SizedBox(height: VntlSpacing.sm),
+                Text(
+                  'Abre una caja desde el módulo de Caja para empezar a vender.',
+                  style: VntlText.body.copyWith(color: colors.textSecondary),
+                  textAlign: TextAlign.center,
                 ),
-              ),
+                const SizedBox(height: VntlSpacing.xl),
+                Center(
+                  child: IntrinsicWidth(
+                    child: VntlButton(
+                      label: 'Abrir Caja',
+                      variant: VntlButtonVariant.ghost,
+                      icon: Icons.lock_open_rounded,
+                      onPressed: widget.onIrACaja,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    return Align(
-      alignment: Alignment.topLeft,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(VntlSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Selecciona una caja', style: VntlText.h3),
-            const SizedBox(height: VntlSpacing.xs),
-            Text(
-              'Elige la caja desde la que vas a vender',
-              style: VntlText.body.copyWith(color: colors.textSecondary),
+        return Align(
+          alignment: Alignment.topLeft,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(VntlSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Selecciona una caja', style: VntlText.h3),
+                const SizedBox(height: VntlSpacing.xs),
+                Text(
+                  'Elige la caja desde la que vas a vender',
+                  style: VntlText.body.copyWith(color: colors.textSecondary),
+                ),
+                const SizedBox(height: VntlSpacing.xl),
+                Wrap(
+                  spacing: VntlSpacing.md,
+                  runSpacing: VntlSpacing.md,
+                  children: ctrl.cajasAbiertas
+                      .map((c) => _CajaAbiertaCard(
+                            caja: c,
+                            onTap: () => ctrl.seleccionarCaja(c.id),
+                          ))
+                      .toList(),
+                ),
+                const VentasSesionSection(),
+              ],
             ),
-            const SizedBox(height: VntlSpacing.xl),
-            Wrap(
-              spacing: VntlSpacing.md,
-              runSpacing: VntlSpacing.md,
-              children: ctrl.cajasAbiertas
-                  .map((c) => _CajaAbiertaCard(
-                        caja: c,
-                        onTap: () => ctrl.seleccionarCaja(c.id),
-                      ))
-                  .toList(),
-            ),
-            const VentasSesionSection(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

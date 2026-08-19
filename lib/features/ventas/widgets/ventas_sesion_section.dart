@@ -7,38 +7,50 @@ import 'package:ventro_app/features/ventas/controllers/venta_controller.dart';
 import 'package:ventro_app/features/ventas/models/venta_dia_model.dart';
 import 'package:ventro_app/features/ventas/screens/venta_detalle_screen.dart';
 
+// CAMBIO: mismo patrón que en SelectorCajaVenta. context.watch → context.read
+// + ListenableBuilder envolviendo el contenido que depende del controller.
+
 class VentasSesionSection extends StatelessWidget {
   const VentasSesionSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final ctrl = context.watch<VentaController>();
+    // read en vez de watch: la suscripción real la hace ListenableBuilder
+    // más abajo (addListener directo), no el InheritedProvider — evita el
+    // mismo bug de release-web donde notifyListeners() encadenados no
+    // propagan el rebuild vía context.watch.
+    final ctrl = context.read<VentaController>();
 
-    if (ctrl.cargandoVentasDeLaSesion) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: VntlSpacing.lg),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
+    return ListenableBuilder(
+      listenable: ctrl,
+      builder: (context, _) {
+        if (ctrl.cargandoVentasDeLaSesion) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: VntlSpacing.lg),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    if (ctrl.ventasDeLaSesion.isEmpty) {
-      return const SizedBox.shrink();
-    }
+        if (ctrl.ventasDeLaSesion.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: VntlSpacing.xl),
-        Divider(color: colors.border, height: 0.5),
-        const SizedBox(height: VntlSpacing.xl),
-        Text('Ventas de la sesión', style: VntlText.h4),
-        const SizedBox(height: VntlSpacing.lg),
-        ...ctrl.ventasDeLaSesion.map((caja) => Padding(
-              padding: const EdgeInsets.only(bottom: VntlSpacing.lg),
-              child: _CajaVentasSesionCard(caja: caja),
-            )),
-      ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: VntlSpacing.xl),
+            Divider(color: colors.border, height: 0.5),
+            const SizedBox(height: VntlSpacing.xl),
+            Text('Ventas de la sesión', style: VntlText.h4),
+            const SizedBox(height: VntlSpacing.lg),
+            ...ctrl.ventasDeLaSesion.map((caja) => Padding(
+                  padding: const EdgeInsets.only(bottom: VntlSpacing.lg),
+                  child: _CajaVentasSesionCard(caja: caja),
+                )),
+          ],
+        );
+      },
     );
   }
 }

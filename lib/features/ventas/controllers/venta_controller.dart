@@ -1,3 +1,4 @@
+// V3 — notifyListeners() centralizado para garantizar repaint en Flutter Web.
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:printing/printing.dart';
@@ -58,6 +59,18 @@ class VentaController extends ChangeNotifier {
   Timer? _inactividadTimer;
   static const _tiempoInactividad = Duration(minutes: 3);
 
+  // ─── Fix de raíz: Flutter Web (CanvasKit) a veces marca el Element tree
+  // como dirty tras un notifyListeners() pero no agenda un frame nuevo con
+  // el compositor — típicamente después de un `await`, o cuando el widget
+  // se remonta (ej. IndexedStack, cambios de rama en build()). En vez de
+  // parchar método por método, se centraliza aquí: CADA notifyListeners()
+  // de este controller fuerza también el agendado del frame. ─────────────
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    SchedulerBinding.instance.scheduleFrame();
+  }
+
   // ─── Getters ────────────────────────────────────────────────────────────────
   VentaStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -84,7 +97,7 @@ class VentaController extends ChangeNotifier {
   VentaDetalleModel? get ventaDetalle => _ventaDetalle;
   bool get cargandoDetalle => _cargandoDetalle;
 
-// ─── Descuentos ────────────────────────────────────────────────────────────────
+  // ─── Descuentos ────────────────────────────────────────────────────────────
   bool get descuentoActivo => _descuentoTipo != null && _descuentoValor > 0;
   TipoDescuento? get descuentoTipo => _descuentoTipo;
   double get descuentoValorConfigurado => _descuentoValor;
@@ -111,7 +124,7 @@ class VentaController extends ChangeNotifier {
   /// Stock disponible de una variante en la sucursal actual. 0 si no hay registro.
   double stockDisponible(int varianteId) => _stockPorVarianteId[varianteId] ?? 0;
 
-  ///listado de las ventas por sesion
+  /// Listado de las ventas por sesión.
   List<CajaVentasSesionModel> _ventasDeLaSesion = [];
   bool _cargandoVentasDeLaSesion = false;
 
@@ -161,7 +174,7 @@ class VentaController extends ChangeNotifier {
     notifyListeners();
   }
 
-// ─── Cliente de la venta actual ──────────────────────────────────────────
+  // ─── Cliente de la venta actual ──────────────────────────────────────────
   int? _clienteId;
   String? _clienteNombre;
   bool _clienteYaElegido = false;
@@ -205,7 +218,6 @@ class VentaController extends ChangeNotifier {
       _status = VentaStatus.error;
       _errorMessage = 'Error inesperado al cargar productos';
     }
-    debugPrint('🟣 cargarDatos notifyListeners final, status=$_status');
     notifyListeners();
   }
 
@@ -356,18 +368,23 @@ class VentaController extends ChangeNotifier {
   // ─── Cajas abiertas + empleado verificado ─────────────────────────────────
 
   Future<void> cargarCajasAbiertas() async {
+    debugPrint('4️⃣ cargarCajasAbiertas() inicio');
     _status = VentaStatus.loading;
     _errorMessage = null;
     notifyListeners();
+    debugPrint('5️⃣ cargarCajasAbiertas() antes del await');
     try {
       final raw = await _ventaService.getCajasAbiertas(sucursalId: _sucursalId);
+      debugPrint('6️⃣ cargarCajasAbiertas() DESPUÉS del await, ${raw.length} cajas');
       _cajasAbiertas = raw.map((json) => CajaModel.fromJson(json)).toList();
       _status = VentaStatus.success;
     } on DioException catch (e) {
       _status = VentaStatus.error;
       _errorMessage = _parseError(e);
     }
+    debugPrint('7️⃣ cargarCajasAbiertas() antes de notifyListeners final');
     notifyListeners();
+    debugPrint('8️⃣ cargarCajasAbiertas() FIN');
     await cargarVentasDeLaSesion();
   }
 
@@ -390,6 +407,7 @@ class VentaController extends ChangeNotifier {
   }
 
   void cambiarCaja() {
+    debugPrint('1️⃣ cambiarCaja() inicio');
     _inactividadTimer?.cancel();
     _cajaId = null;
     _empleadoNumero = null;
@@ -400,7 +418,9 @@ class VentaController extends ChangeNotifier {
     _descuentoValor = 0;
     _descuentoAutorizadoPor = null;
     _limpiarCliente();
+    debugPrint('2️⃣ cambiarCaja() antes de notifyListeners');
     notifyListeners();
+    debugPrint('3️⃣ cambiarCaja() DESPUÉS de notifyListeners — esto debería imprimir de inmediato');
   }
 
   Future<bool> verificarEmpleado(String employeeNumber, String pin) async {
@@ -415,7 +435,6 @@ class VentaController extends ChangeNotifier {
       _verificandoEmpleado = false;
       _reiniciarTimerInactividad();
       notifyListeners();
-      SchedulerBinding.instance.scheduleFrame();
       return true;
     } on DioException catch (e) {
       _verificandoEmpleado = false;

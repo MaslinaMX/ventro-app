@@ -31,7 +31,13 @@ class CatalogoPublicoService {
       options: Options(headers: {'X-Tenant-Slug': slug}),
     );
 
-    final data = response.data['data'] as List<dynamic>;
+    // FIX: a diferencia de ProductoService (endpoint autenticado, que sí
+    // envuelve la respuesta como {"data": [...]}), /catalogo devuelve el
+    // array de productos pelado — confirmado con la respuesta real del
+    // endpoint. Antes se hacía response.data['data'] as List, lo cual
+    // truena con "Invalid argument (index): data" porque response.data
+    // ya ES la List y no se puede indexar con un String.
+    final data = response.data as List<dynamic>;
     return data.map((json) => ProductoModel.fromJson(json)).toList();
   }
 

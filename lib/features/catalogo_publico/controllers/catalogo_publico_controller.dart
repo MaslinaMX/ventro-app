@@ -90,7 +90,9 @@ class CatalogoPublicoController extends ChangeNotifier {
     } on DioException catch (e) {
       _status = CatalogoPublicoStatus.error;
       _errorMessage = _parseError(e);
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('💥 Error en cargarDatos(): $e');
+      debugPrint('$stack');
       _status = CatalogoPublicoStatus.error;
       _errorMessage = 'Error inesperado al cargar el catálogo';
     }
